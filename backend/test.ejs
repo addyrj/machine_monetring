@@ -1,0 +1,1293 @@
+<!-- device.ejs
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #070b12; --surface: #0d1526; --card: #111d35;
+      --card2: #162240; --border: #1c2e52; --text: #e2e8f0;
+      --muted: #5a7098; --accent: #3b82f6; --green: #10b981;
+      --red: #ef4444; --yellow: #f59e0b; --purple: #8b5cf6;
+    }
+    html, body { height: 100%; }
+    body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; display: flex; flex-direction: column; min-height: 100vh; }
+
+    /* HEADER */
+    header { background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+    .hdr { max-width: 1400px; margin: 0 auto; padding: 0 28px; height: 62px; display: flex; align-items: center; justify-content: space-between; }
+    .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .logo-svg { width: 34px; height: 34px; }
+    .logo-text { font-size: 1.2rem; font-weight: 800; letter-spacing: -.02em; background: linear-gradient(135deg,#3b82f6,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .hdr-right { display: flex; align-items: center; gap: 16px; }
+    .clock { font-size: .77rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+    .live-badge { display: flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: 20px; background: rgba(16,185,129,.1); border: 1px solid rgba(16,185,129,.25); font-size: .72rem; font-weight: 700; color: var(--green); }
+    .live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); animation: lp 1.8s infinite; }
+    @keyframes lp { 0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(16,185,129,.55)} 50%{opacity:.7;box-shadow:0 0 0 5px rgba(16,185,129,0)} }
+
+    /* MAIN */
+    main { flex: 1; max-width: 1400px; margin: 0 auto; padding: 28px 28px; width: 100%; }
+
+    /* BACK */
+    .back { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); text-decoration: none; font-size: .875rem; margin-bottom: 18px; transition: color .18s; }
+    .back:hover { color: var(--accent); }
+
+    /* HERO */
+    .hero { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 24px 28px; margin-bottom: 26px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; }
+    .hero-name { font-size: 1.5rem; font-weight: 800; letter-spacing: -.025em; }
+    .hero-sub  { font-size: .78rem; color: var(--muted); margin-top: 4px; }
+    .hero-right { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+    .big-status { display: flex; align-items: center; gap: 9px; padding: 10px 20px; border-radius: 12px; font-size: .95rem; font-weight: 800; }
+    .big-status .dot { width: 10px; height: 10px; border-radius: 50%; background: currentColor; }
+    .big-status.on  { background: rgba(16,185,129,.12); color: var(--green); border: 1px solid rgba(16,185,129,.3); }
+    .big-status.off { background: rgba(90,112,152,.1);  color: var(--muted);  border: 1px solid rgba(90,112,152,.2); }
+    .big-status.on .dot { animation: lp 1.5s infinite; }
+    .session-pill { font-size: .78rem; color: var(--muted); background: var(--card2); border: 1px solid var(--border); border-radius: 10px; padding: 6px 14px; }
+    .session-pill span { color: var(--green); font-weight: 700; }
+
+    /* TABS */
+    .tabs { display: flex; gap: 3px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 5px; margin-bottom: 24px; width: fit-content; }
+    .tab { padding: 9px 26px; border-radius: 8px; border: none; cursor: pointer; font-size: .875rem; font-weight: 700; color: var(--muted); background: transparent; transition: all .18s; }
+    .tab.active { background: var(--accent); color: #fff; }
+    .tab:not(.active):hover { background: var(--card2); color: var(--text); }
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    /* DATE CONTROLS */
+    .dctl { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+    .dctl label { font-size: .78rem; color: var(--muted); }
+    .dinput { padding: 8px 14px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: .875rem; outline: none; cursor: pointer; transition: border-color .18s; }
+    .dinput:focus { border-color: var(--accent); }
+    .nbtn { padding: 8px 14px; background: var(--card2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); cursor: pointer; font-size: .875rem; transition: background .15s; font-weight: 600; }
+    .nbtn:hover { background: var(--border); }
+    .nbtn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .rng-label { font-size: .875rem; font-weight: 700; min-width: 170px; text-align: center; }
+
+    /* STAT CARDS */
+    .srow { display: grid; grid-template-columns: repeat(auto-fit, minmax(155px,1fr)); gap: 13px; margin-bottom: 22px; }
+    .sc { background: var(--card); border: 1px solid var(--border); border-radius: 13px; padding: 16px 18px; }
+    .sc-lbl { font-size: .68rem; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; }
+    .sc-val { font-size: 1.55rem; font-weight: 800; margin-top: 5px; line-height: 1; letter-spacing: -.025em; }
+    .sc-sub { font-size: .68rem; color: var(--muted); margin-top: 4px; }
+
+    /* 24H TIMELINE */
+    .tl-wrap { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px; margin-bottom: 22px; }
+    .tl-title { font-size: .78rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; }
+    .tl-hours { display: flex; margin-bottom: 6px; overflow: hidden; }
+    .tl-hours span { flex: 1; font-size: .62rem; color: var(--muted); }
+    .tl-bar {
+      position: relative; height: 40px; background: rgba(239,68,68,.07);
+      border-radius: 8px; overflow: hidden; border: 1px solid rgba(239,68,68,.18);
+    }
+    .tl-seg {
+      position: absolute; top: 0; height: 100%; background: var(--green);
+      border-radius: 3px; opacity: .9; cursor: pointer; transition: opacity .18s;
+    }
+    .tl-seg:hover { opacity: 1; }
+    .tl-seg.running { background: linear-gradient(90deg, var(--green), var(--yellow)); animation: runpulse 2s infinite; }
+    @keyframes runpulse { 0%,100%{opacity:.9} 50%{opacity:.65} }
+    .tl-legend { display: flex; gap: 16px; margin-top: 9px; }
+    .tl-li { display: flex; align-items: center; gap: 5px; font-size: .7rem; color: var(--muted); }
+    .tl-dot { width: 10px; height: 10px; border-radius: 2px; }
+
+    /* TABLE */
+    .tbl-wrap { background: var(--card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+    .tbl-hd { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+    .tbl-hd h3 { font-size: .88rem; font-weight: 800; margin: 0; }
+    .cnt-badge { font-size: .72rem; padding: 4px 10px; background: rgba(59,130,246,.1); color: var(--accent); border-radius: 20px; border: 1px solid rgba(59,130,246,.25); font-weight: 700; }
+    .page-size-select { width: auto; padding: 4px 8px; font-size: 0.75rem; background: var(--card2); border: 1px solid var(--border); color: var(--text); border-radius: 6px; cursor: pointer; }
+    table { width: 100%; border-collapse: collapse; }
+    thead th { padding: 10px 16px; font-size: .68rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); text-align: left; border-bottom: 1px solid var(--border); background: var(--card2); }
+    tbody td { padding: 11px 16px; font-size: .84rem; border-bottom: 1px solid rgba(28,46,82,.5); }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: var(--card2); }
+    .run-badge { display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:.7rem;font-weight:700;background:rgba(16,185,129,.1);color:var(--green);border:1px solid rgba(16,185,129,.25); }
+
+    /* PAGINATION */
+    .pagination-container { padding: 16px 20px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; background: var(--card); }
+    .pagination-controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .page-numbers { display: flex; gap: 5px; flex-wrap: wrap; }
+    .page-btn { padding: 6px 12px; background: var(--card2); border: 1px solid var(--border); border-radius: 6px; color: var(--text); cursor: pointer; font-size: .8rem; transition: all .15s; }
+    .page-btn:hover:not(:disabled) { background: var(--border); }
+    .page-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+    .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .pagination-info { color: var(--muted); font-size: 0.875rem; }
+
+    /* WEEK BAR CHART */
+    .wk-chart { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 22px; margin-bottom: 22px; }
+    .wk-title { font-size: .78rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 20px; }
+    .wk-bars { display: grid; grid-template-columns: repeat(7,1fr); gap: 10px; height: 180px; align-items: flex-end; }
+    .wk-col { display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; justify-content: flex-end; }
+    .wk-barwrap { flex: 1; width: 100%; display: flex; align-items: flex-end; }
+    .wk-bar {
+      width: 100%; border-radius: 6px 6px 0 0; min-height: 4px;
+      background: linear-gradient(180deg, var(--accent), rgba(59,130,246,.3));
+      cursor: pointer; transition: background .18s; position: relative;
+    }
+    .wk-bar.today { background: linear-gradient(180deg, var(--green), rgba(16,185,129,.25)); }
+    .wk-bar:hover { filter: brightness(1.2); }
+    .wk-tip {
+      display: none; position: absolute; bottom: calc(100% + 7px); left: 50%; transform: translateX(-50%);
+      background: var(--card2); border: 1px solid var(--border); border-radius: 7px;
+      padding: 7px 11px; font-size: .7rem; white-space: nowrap; z-index: 10; pointer-events: none;
+      line-height: 1.5;
+    }
+    .wk-bar:hover .wk-tip { display: block; }
+    .wk-day { font-size: .68rem; color: var(--muted); font-weight: 700; }
+    .wk-hrs { font-size: .62rem; color: var(--accent); }
+    .wk-bar.today ~ .wk-hrs { color: var(--green); }
+
+    /* WEEK TABLE */
+    .wk-tbl { background: var(--card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin-bottom: 22px; }
+
+    /* MONTH CALENDAR */
+    .cal-wrap { background: var(--card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+    .cal-dows { display: grid; grid-template-columns: repeat(7,1fr); }
+    .cal-dow { text-align: center; padding: 10px 4px; font-size: .68rem; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; border-bottom: 1px solid var(--border); background: var(--card2); }
+    .cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 1px; background: var(--border); }
+    .cal-cell { background: var(--card); min-height: 82px; padding: 8px; cursor: pointer; transition: background .15s; }
+    .cal-cell:hover { background: var(--card2); }
+    .cal-cell.empty { background: rgba(7,11,18,.7); cursor: default; }
+    .cal-cell.today-c { box-shadow: inset 0 0 0 2px var(--accent); }
+    .cal-cell.sel-c { background: rgba(59,130,246,.07); }
+    .cal-dn { font-size: .78rem; font-weight: 700; margin-bottom: 4px; }
+    .cal-rt { font-size: .7rem; color: var(--green); }
+    .cal-cy { font-size: .62rem; color: var(--muted); }
+    .cal-heat { height: 4px; border-radius: 2px; margin-top: 5px; overflow: hidden; background: var(--card2); }
+    .cal-heat-fill { height: 100%; border-radius: 2px; }
+
+    /* LOADING / EMPTY */
+    .ld { display: flex; align-items: center; gap: 10px; padding: 30px 20px; color: var(--muted); font-size: .85rem; }
+    .spin { width: 18px; height: 18px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; flex-shrink: 0; }
+    @keyframes spin { to{transform:rotate(360deg)} }
+    .no-data { padding: 40px; text-align: center; color: var(--muted); font-size: .875rem; }
+
+    /* FOOTER */
+    footer { text-align: center; padding: 18px; font-size: .72rem; color: var(--muted); border-top: 1px solid var(--border); }
+
+    @media(max-width:700px){
+      .hdr { padding: 0 16px; }
+      main { padding: 18px 16px; }
+      .hero { flex-direction: column; align-items: flex-start; }
+      .srow { grid-template-columns: 1fr 1fr; }
+      .wk-bars { height: 120px; }
+      .cal-cell { min-height: 56px; padding: 5px; }
+      .pagination-container { flex-direction: column; align-items: stretch; }
+      .pagination-controls { justify-content: center; }
+      .page-numbers { justify-content: center; }
+      table { font-size: 0.75rem; }
+      thead th, tbody td { padding: 8px 10px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="hdr">
+    <a href="/" class="logo">
+      <svg class="logo-svg" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="34" height="34" rx="9" fill="url(#lg2)"/>
+        <path d="M8 22l4.5-7 4 4.5 4.5-9 4 6" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="25.5" cy="10" r="2.8" fill="#10b981"/>
+        <defs><linearGradient id="lg2" x1="0" y1="0" x2="34" y2="34" gradientUnits="userSpaceOnUse"><stop stop-color="#3b82f6"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs>
+      </svg>
+      <span class="logo-text">Machine Runtime</span>
+    </a>
+    <div class="hdr-right">
+      <span class="clock" id="clock"></span>
+      <div class="live-badge"><span class="live-dot"></span>LIVE</div>
+    </div>
+  </div>
+</header>
+
+<!-- MAIN -->
+<main>
+  <a href="/" class="back">← All Devices</a>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div>
+      <div class="hero-name" id="hero-name">Loading…</div>
+      <div class="hero-sub">Device ID: <strong><%= device_id %></strong></div>
+    </div>
+    <div class="hero-right">
+      <div class="session-pill" id="session-pill">Session: <span>–</span></div>
+      <div class="big-status off" id="big-status">
+        <span class="dot"></span><span id="status-txt">–</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab active" onclick="sw('daily')">📅 Daily</button>
+    <button class="tab"        onclick="sw('weekly')">📆 Weekly</button>
+    <button class="tab"        onclick="sw('monthly')">🗓️ Monthly</button>
+  </div>
+
+  <!-- DAILY PANEL -->
+  <div class="panel active" id="p-daily">
+    <div class="dctl">
+      <label>Date</label>
+      <input type="date" class="dinput" id="d-date" onchange="loadDaily()">
+      <button class="nbtn" onclick="shDay(-1)">◀</button>
+      <button class="nbtn" onclick="shDay(1)">▶</button>
+      <button class="nbtn" onclick="goToday()">Today</button>
+    </div>
+
+    <div class="srow">
+      <div class="sc"><div class="sc-lbl">Total Cycles</div>  <div class="sc-val" id="d-cy" style="color:var(--accent)">–</div></div>
+      <div class="sc"><div class="sc-lbl">Total Runtime</div> <div class="sc-val" id="d-rt" style="color:var(--green)">–</div><div class="sc-sub" id="d-rt-sub"></div></div>
+      <div class="sc"><div class="sc-lbl">Downtime</div>      <div class="sc-val" id="d-dt" style="color:var(--red)">–</div></div>
+      <div class="sc"><div class="sc-lbl">Efficiency</div>    <div class="sc-val" id="d-ef" style="color:var(--yellow)">–</div></div>
+    </div>
+
+    <!-- Timeline -->
+    <div class="tl-wrap">
+      <div class="tl-title">
+        <span>24-Hour Activity Timeline</span>
+        <span id="tl-date" style="font-weight:400;letter-spacing:0"></span>
+      </div>
+      <div class="tl-hours" id="tl-hrs"></div>
+      <div class="tl-bar" id="tl-bar"><div class="ld"><div class="spin"></div>Loading…</div></div>
+      <div class="tl-legend">
+        <div class="tl-li"><div class="tl-dot" style="background:var(--green)"></div>Machine ON</div>
+        <div class="tl-li"><div class="tl-dot" style="background:rgba(239,68,68,.25)"></div>Machine OFF</div>
+        <div class="tl-li"><div class="tl-dot" style="background:linear-gradient(90deg,var(--green),var(--yellow))"></div>Currently Running</div>
+      </div>
+    </div>
+
+    <!-- Cycle Table with Pagination -->
+    <div class="tbl-wrap">
+      <div class="tbl-hd">
+        <h3>Cycle Details</h3>
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <span class="cnt-badge" id="d-cy-badge">0 cycles</span>
+          <select id="pageSize" class="page-size-select" onchange="changePageSize()">
+            <option value="10">10 per page</option>
+            <option value="20">20 per page</option>
+            <option value="50">50 per page</option>
+            <option value="100">100 per page</option>
+          </select>
+        </div>
+      </div>
+      <div id="d-tbl"><div class="ld"><div class="spin"></div>Loading cycles…</div></div>
+      <div id="pagination-container"></div>
+    </div>
+  </div>
+
+  <!-- WEEKLY PANEL -->
+  <div class="panel" id="p-weekly">
+    <div class="dctl">
+      <button class="nbtn" onclick="shWk(-1)">◀ Prev</button>
+      <div class="rng-label" id="wk-lbl">–</div>
+      <button class="nbtn" onclick="shWk(1)">Next ▶</button>
+      <button class="nbtn" onclick="goThisWk()">This Week</button>
+    </div>
+
+    <div class="wk-chart">
+      <div class="wk-title">Daily Runtime (hours)</div>
+      <div class="wk-bars" id="wk-bars"><div class="ld" style="grid-column:1/-1"><div class="spin"></div></div></div>
+    </div>
+
+    <div class="wk-tbl tbl-wrap">
+      <div class="tbl-hd"><h3>Weekly Summary</h3></div>
+      <div id="wk-tbl"><div class="ld"><div class="spin"></div></div></div>
+    </div>
+  </div>
+
+  <!-- MONTHLY PANEL -->
+  <div class="panel" id="p-monthly">
+    <div class="dctl">
+      <button class="nbtn" onclick="shMo(-1)">◀ Prev</button>
+      <div class="rng-label" id="mo-lbl">–</div>
+      <button class="nbtn" onclick="shMo(1)">Next ▶</button>
+      <button class="nbtn" onclick="goThisMo()">This Month</button>
+    </div>
+
+    <div class="cal-wrap">
+      <div class="cal-dows">
+        <div class="cal-dow">Sun</div><div class="cal-dow">Mon</div><div class="cal-dow">Tue</div>
+        <div class="cal-dow">Wed</div><div class="cal-dow">Thu</div><div class="cal-dow">Fri</div>
+        <div class="cal-dow">Sat</div>
+      </div>
+      <div class="cal-grid" id="cal-grid">
+        <div class="ld" style="grid-column:1/-1"><div class="spin"></div>Loading…</div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- FOOTER -->
+<footer>MachineTrack IoT Dashboard &nbsp;·&nbsp; <script>document.write(new Date().getFullYear())</script></footer>
+
+<!-- SCRIPT -->
+<script>
+  const DID = '<%= device_id %>';
+  const API = '/api';
+  const TODAY = new Date().toISOString().split('T')[0];
+
+  let dailyDate = TODAY;
+  let wkStart   = monOf(new Date());
+  let moDate    = new Date();
+  
+  // Pagination variables
+  let currentPage = 1;
+  let pageSize = 10;
+  let allCyclesData = [];
+
+  /* Clock */
+  (function tick(){
+    document.getElementById('clock').textContent = new Date().toLocaleString('en-IN',
+      { weekday:'short', day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit' });
+    setTimeout(tick, 1000);
+  })();
+
+  /* Tabs */
+  const tabs = ['daily','weekly','monthly'];
+  function sw(name) {
+    document.querySelectorAll('.tab').forEach((b,i) => b.classList.toggle('active', tabs[i] === name));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('p-' + name).classList.add('active');
+    if (name === 'weekly')  loadWeekly();
+    if (name === 'monthly') loadMonthly();
+  }
+
+  /* Hero */
+  async function loadHero() {
+    try {
+      const [devRes, rtRes] = await Promise.all([fetch(`${API}/devices`), fetch(`${API}/runtime/${DID}`)]);
+      const devs = await devRes.json();
+      const rt   = await rtRes.json();
+      const dev  = devs.find(d => d.device_id == DID);
+      if (dev) document.getElementById('hero-name').textContent = dev.machine_name;
+      const isOn = rt.current_status === 'ON';
+      const el   = document.getElementById('big-status');
+      el.className = 'big-status ' + (isOn ? 'on' : 'off');
+      document.getElementById('status-txt').textContent = rt.current_status || '–';
+      const sp = document.getElementById('session-pill');
+      if (isOn && rt.current_session > 0) {
+        sp.innerHTML = `Session: <span>${rt.current_session_formatted}</span>`;
+      } else {
+        sp.innerHTML = 'Session: <span style="color:var(--muted)">Idle</span>';
+      }
+    } catch(e) {}
+  }
+
+  /* DAILY FUNCTIONS */
+  function goToday()  { dailyDate = TODAY; document.getElementById('d-date').value = TODAY; currentPage = 1; loadDaily(); }
+  function shDay(n)   {
+    const d = new Date(dailyDate + 'T00:00:00'); d.setDate(d.getDate() + n);
+    if (d > new Date()) return;
+    dailyDate = d.toISOString().split('T')[0];
+    document.getElementById('d-date').value = dailyDate;
+    currentPage = 1;
+    loadDaily();
+  }
+
+  function changePageSize() {
+    pageSize = parseInt(document.getElementById('pageSize').value);
+    currentPage = 1;
+    renderCycleTable();
+  }
+
+  function goToPage(page) {
+    currentPage = page;
+    renderCycleTable();
+  }
+
+  function renderCycleTable() {
+    if (!allCyclesData || allCyclesData.length === 0) {
+      document.getElementById('d-tbl').innerHTML = '<div class="no-data">No cycles recorded for this date.</div>';
+      document.getElementById('pagination-container').innerHTML = '';
+      return;
+    }
+
+    const totalItems = allCyclesData.length;
+    const totalPages = Math.ceil(totalItems / pageSize);
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = Math.min(startIndex + pageSize, totalItems);
+    const pageData = allCyclesData.slice(startIndex, endIndex);
+
+    // Generate table rows
+    const rows = pageData.map((c, idx) => {
+      const actualCycleNumber = totalItems - (startIndex + idx);
+      const gap = (!c.isRunning && pageData[idx + 1]) ? calcGap(c.endTime, pageData[idx + 1].startTime) : '–';
+      return `<tr>
+        <td style="color:var(--muted)">${actualCycleNumber}</td>
+        <td style="color:var(--green)">${c.startTime}</td>
+        <td>${c.endTime ? c.endTime : '<span class="run-badge">● Running</span>'}</td>
+        <td style="color:var(--yellow);font-weight:700">${c.durationFormatted}</td>
+        <td style="color:var(--muted)">${gap}</td>
+      </tr>`;
+    }).join('');
+
+    document.getElementById('d-tbl').innerHTML = `<table>
+      <thead><tr><th>#</th><th>Start Time</th><th>End Time</th><th>ON Duration</th><th>OFF Gap (next cycle)</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+
+    // Generate pagination controls
+    let paginationHtml = '<div class="pagination-container"><div class="pagination-controls">';
+    
+    // First and Previous buttons
+    paginationHtml += `<button class="page-btn" onclick="goToPage(1)" ${currentPage === 1 ? 'disabled' : ''}>« First</button>`;
+    paginationHtml += `<button class="page-btn" onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>‹ Prev</button>`;
+    
+    // Page numbers
+    paginationHtml += '<div class="page-numbers">';
+    const maxVisiblePages = 5;
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+    
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      paginationHtml += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+    }
+    paginationHtml += '</div>';
+    
+    // Next and Last buttons
+    paginationHtml += `<button class="page-btn" onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>Next ›</button>`;
+    paginationHtml += `<button class="page-btn" onclick="goToPage(${totalPages})" ${currentPage === totalPages ? 'disabled' : ''}>Last »</button>`;
+    paginationHtml += '</div>';
+    
+    // Info
+    paginationHtml += `<div class="pagination-info">Showing ${startIndex + 1}-${endIndex} of ${totalItems} cycles</div>`;
+    paginationHtml += '</div>';
+    
+    document.getElementById('pagination-container').innerHTML = paginationHtml;
+  }
+
+  async function loadDaily() {
+    dailyDate = document.getElementById('d-date').value || TODAY;
+    document.getElementById('tl-date').textContent = fmtDateShort(new Date(dailyDate + 'T00:00:00'));
+    ['d-cy','d-rt','d-dt','d-ef'].forEach(id => document.getElementById(id).textContent = '–');
+    document.getElementById('tl-bar').innerHTML = '<div class="ld"><div class="spin"></div>Loading…</div>';
+    document.getElementById('d-tbl').innerHTML  = '<div class="ld"><div class="spin"></div>Loading cycles…</div>';
+    document.getElementById('pagination-container').innerHTML = '';
+    try {
+      const res  = await fetch(`${API}/cycles/${DID}?date=${dailyDate}`);
+      const data = await res.json();
+      
+      document.getElementById('d-cy').textContent      = data.totalCycles;
+      document.getElementById('d-rt').textContent      = data.totalRuntimeFormatted;
+      document.getElementById('d-rt-sub').textContent  = (data.totalRuntime / 3600).toFixed(2) + ' hrs';
+      document.getElementById('d-dt').textContent      = data.downtimeFormatted;
+      document.getElementById('d-ef').textContent      = data.efficiencyPercent + '%';
+      document.getElementById('d-cy-badge').textContent = `${data.totalCycles} cycle${data.totalCycles !== 1 ? 's' : ''}`;
+      
+      drawTimeline(data.cycles);
+      
+      // Store all cycles data and reverse to show latest first
+      allCyclesData = [...data.cycles].reverse();
+      currentPage = 1;
+      renderCycleTable();
+      
+    } catch(e) {
+      document.getElementById('tl-bar').innerHTML = '<div class="no-data">Failed to load timeline.</div>';
+      document.getElementById('d-tbl').innerHTML  = '<div class="no-data">Failed to load cycles.</div>';
+      document.getElementById('pagination-container').innerHTML = '';
+    }
+  }
+
+  function drawTimeline(cycles) {
+    const hrs = document.getElementById('tl-hrs');
+    hrs.innerHTML = '';
+    for (let i = 0; i <= 24; i += 3) {
+      const s = document.createElement('span');
+      s.textContent = i + ':00';
+      s.style.cssText = 'flex:1;font-size:.6rem;color:var(--muted)';
+      if (i === 24) s.style.cssText += ';text-align:right;flex:0 0 auto';
+      hrs.appendChild(s);
+    }
+    const bar = document.getElementById('tl-bar');
+    if (!cycles.length) {
+      bar.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:.8rem;color:var(--muted)">No activity on this date</div>';
+      return;
+    }
+    bar.innerHTML = cycles.map(c => `
+      <div class="tl-seg ${c.isRunning ? 'running' : ''}"
+           style="left:${c.startPercent}%;width:${Math.max(0.15, parseFloat(c.widthPercent))}%"
+           title="Cycle #${c.cycleNumber}: ${c.startTime} → ${c.endTime || 'running'} (${c.durationFormatted})">
+      </div>`).join('');
+  }
+
+  function calcGap(endStr, nextStr) {
+    try {
+      const b = dailyDate;
+      const diff = Math.floor((new Date(`${b} ${nextStr}`) - new Date(`${b} ${endStr}`)) / 1000);
+      return isNaN(diff) || diff < 0 ? '–' : fmtSec(diff);
+    } catch { return '–'; }
+  }
+
+  /* WEEKLY FUNCTIONS */
+  function monOf(d) {
+    const day = d.getDay(), diff = d.getDate() - day + (day === 0 ? -6 : 1);
+    return new Date(new Date(d).setDate(diff));
+  }
+  function sunOf(mon) { return new Date(new Date(mon).setDate(mon.getDate() + 6)); }
+  function goThisWk() { wkStart = monOf(new Date()); loadWeekly(); }
+  function shWk(n)    { wkStart = new Date(wkStart.setDate(wkStart.getDate() + n * 7)); loadWeekly(); }
+
+  async function loadWeekly() {
+    const end     = sunOf(new Date(wkStart));
+    const startS  = ds(wkStart), endS = ds(end);
+    document.getElementById('wk-lbl').textContent = `${fmtDateShort(wkStart)} – ${fmtDateShort(end)}`;
+    document.getElementById('wk-bars').innerHTML = '<div class="ld" style="grid-column:1/-1"><div class="spin"></div></div>';
+    document.getElementById('wk-tbl').innerHTML  = '<div class="ld"><div class="spin"></div></div>';
+    try {
+      const res  = await fetch(`${API}/daily-summary/${DID}?start=${startS}&end=${endS}`);
+      const data = await res.json();
+      drawWkBars(data.days);
+      drawWkTable(data.days);
+    } catch {
+      document.getElementById('wk-bars').innerHTML = '<div class="no-data" style="grid-column:1/-1">Failed to load.</div>';
+    }
+  }
+
+  function drawWkBars(days) {
+    const maxSec = Math.max(...days.map(d => d.runtime_seconds), 1);
+    document.getElementById('wk-bars').innerHTML = days.map(d => {
+      const pct  = (d.runtime_seconds / maxSec * 100).toFixed(1);
+      const dObj = new Date(d.date + 'T00:00:00');
+      const dayN = dObj.toLocaleDateString('en-US', { weekday: 'short' });
+      const dayD = dObj.getDate();
+      const isT  = d.date === TODAY;
+      return `<div class="wk-col">
+        <div class="wk-barwrap">
+          <div class="wk-bar ${isT ? 'today' : ''}" style="height:${Math.max(2, parseFloat(pct))}%"
+               onclick="jumpToDay('${d.date}')">
+            <div class="wk-tip">${d.date}<br>Runtime: ${d.runtime_formatted}<br>Cycles: ${d.cycle_count}<br>Eff: ${d.efficiency_percent}%</div>
+          </div>
+        </div>
+        <div class="wk-day">${dayN} ${dayD}</div>
+        <div class="wk-hrs" style="color:${isT ? 'var(--green)' : 'var(--accent)'}">${d.runtime_hours}h</div>
+      </div>`;
+    }).join('');
+  }
+
+  function drawWkTable(days) {
+    const totSec = days.reduce((a, d) => a + d.runtime_seconds, 0);
+    const totCy  = days.reduce((a, d) => a + d.cycle_count, 0);
+    const rows   = days.map(d => {
+      const dow  = new Date(d.date + 'T00:00:00').toLocaleDateString('en-US', { weekday:'short', day:'2-digit', month:'short' });
+      const col  = heatColor(parseFloat(d.efficiency_percent));
+      return `鱼
+        <td>${dow}鱼
+        <td style="color:var(--accent)">${d.cycle_count}鱼
+        <td style="color:var(--green)">${d.runtime_formatted}鱼
+        <td>${d.runtime_hours}h鱼
+        <td>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="flex:1;height:6px;background:var(--card2);border-radius:3px;overflow:hidden">
+              <div style="height:100%;width:${d.efficiency_percent}%;background:${col};border-radius:3px"></div>
+            </div>
+            <span style="font-size:.72rem;color:var(--muted);min-width:36px">${d.efficiency_percent}%</span>
+          </div>
+        鱼
+       `;
+    }).join('');
+    document.getElementById('wk-tbl').innerHTML = `§
+      <thead> <th>Day</th><th>Cycles</th><th>Runtime</th><th>Hours</th><th>Efficiency</th> </thead>
+      <tbody>
+        ${rows}
+        <tr style="background:var(--card2);font-weight:700">
+          <td>Total / Avg</td>
+          <td style="color:var(--accent)">${totCy}</td>
+          <td style="color:var(--green)">${fmtSec(totSec)}</td>
+          <td>${(totSec/3600).toFixed(2)}h</td>
+          <td style="color:var(--muted)">–</td>
+        </tr>
+      </tbody>
+     `;
+  }
+
+  function jumpToDay(date) { dailyDate = date; document.getElementById('d-date').value = date; sw('daily'); }
+
+  /* MONTHLY FUNCTIONS */
+  function goThisMo() { moDate = new Date(); loadMonthly(); }
+  function shMo(n)    { moDate = new Date(moDate.getFullYear(), moDate.getMonth() + n, 1); loadMonthly(); }
+
+  async function loadMonthly() {
+    const y = moDate.getFullYear(), m = moDate.getMonth();
+    document.getElementById('mo-lbl').textContent =
+      moDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    const startS = `${y}-${pad(m+1)}-01`;
+    const last   = new Date(y, m+1, 0).getDate();
+    const endS   = `${y}-${pad(m+1)}-${pad(last)}`;
+    document.getElementById('cal-grid').innerHTML = '<div class="ld" style="grid-column:1/-1"><div class="spin"></div>Loading…</div>';
+    try {
+      const res  = await fetch(`${API}/daily-summary/${DID}?start=${startS}&end=${endS}`);
+      const data = await res.json();
+      drawCal(y, m, data.days);
+    } catch {
+      document.getElementById('cal-grid').innerHTML = '<div class="no-data" style="grid-column:1/-1">Failed to load.</div>';
+    }
+  }
+
+  function drawCal(y, m, days) {
+    const mp   = {};
+    days.forEach(d => { mp[d.date] = d; });
+    const firstDow = new Date(y, m, 1).getDay();
+    const lastDay  = new Date(y, m+1, 0).getDate();
+    let html = '';
+    for (let i = 0; i < firstDow; i++) html += '<div class="cal-cell empty"><div class="cal-dn"></div></div>';
+    for (let d = 1; d <= lastDay; d++) {
+      const dateStr = `${y}-${pad(m+1)}-${pad(d)}`;
+      const info    = mp[dateStr] || { runtime_seconds:0, cycle_count:0, runtime_formatted:'–', efficiency_percent:'0.0' };
+      const isT     = dateStr === TODAY;
+      const col     = heatColor(parseFloat(info.efficiency_percent));
+      html += `
+        <div class="cal-cell ${isT ? 'today-c' : ''}" onclick="calClick(this,'${dateStr}')">
+          <div class="cal-dn" style="color:${isT ? 'var(--accent)' : 'var(--text)'}">${d}</div>
+          ${info.runtime_seconds > 0
+            ? `<div class="cal-rt">${info.runtime_formatted}</div>
+               <div class="cal-cy">${info.cycle_count} cycle${info.cycle_count!==1?'s':''}</div>
+               <div class="cal-heat"><div class="cal-heat-fill" style="width:${info.efficiency_percent}%;background:${col}"></div></div>`
+            : `<div class="cal-cy" style="color:var(--border)">No data</div>`}
+        </div>`;
+    }
+    document.getElementById('cal-grid').innerHTML = html;
+  }
+
+  function calClick(el, date) {
+    document.querySelectorAll('.sel-c').forEach(c => c.classList.remove('sel-c'));
+    el.classList.add('sel-c');
+    jumpToDay(date);
+  }
+
+  /* HELPERS */
+  function fmtSec(s) {
+    if (s <= 0) return '0s';
+    const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
+    return h > 0 ? `${h}h ${m}m ${sec}s` : m > 0 ? `${m}m ${sec}s` : `${sec}s`;
+  }
+  function fmtDateShort(d) { return d.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }); }
+  function ds(d) { return d instanceof Date ? d.toISOString().split('T')[0] : d; }
+  function pad(n) { return String(n).padStart(2,'0'); }
+  function heatColor(p) {
+    if (p <= 0)  return 'var(--border)';
+    if (p < 20)  return '#ef4444';
+    if (p < 40)  return '#f59e0b';
+    if (p < 70)  return '#3b82f6';
+    return '#10b981';
+  }
+
+  /* INIT */
+  document.getElementById('d-date').value = TODAY;
+  loadHero();
+  loadDaily();
+  setInterval(loadHero, 15000);
+</script>
+</body>
+</html>
+ -->
+
+
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #070b12; --surface: #0d1526; --card: #111d35;
+      --card2: #162240; --border: #1c2e52; --text: #e2e8f0;
+      --muted: #5a7098; --accent: #3b82f6; --green: #10b981;
+      --red: #ef4444; --yellow: #f59e0b; --purple: #8b5cf6;
+    }
+    html, body { height: 100%; }
+    body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; display: flex; flex-direction: column; min-height: 100vh; }
+
+    /* HEADER */
+    header { background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+    .hdr { max-width: 1400px; margin: 0 auto; padding: 0 28px; height: 62px; display: flex; align-items: center; justify-content: space-between; }
+    .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .logo-svg { width: 34px; height: 34px; }
+    .logo-text { font-size: 1.2rem; font-weight: 800; letter-spacing: -.02em; background: linear-gradient(135deg,#3b82f6,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .hdr-right { display: flex; align-items: center; gap: 16px; }
+    .clock { font-size: .77rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+    .live-badge { display: flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: 20px; background: rgba(16,185,129,.1); border: 1px solid rgba(16,185,129,.25); font-size: .72rem; font-weight: 700; color: var(--green); }
+    .live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); animation: lp 1.8s infinite; }
+    @keyframes lp { 0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(16,185,129,.55)} 50%{opacity:.7;box-shadow:0 0 0 5px rgba(16,185,129,0)} }
+
+    /* MAIN */
+    main { flex: 1; max-width: 1400px; margin: 0 auto; padding: 28px 28px; width: 100%; }
+
+    /* BACK */
+    .back { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); text-decoration: none; font-size: .875rem; margin-bottom: 18px; transition: color .18s; }
+    .back:hover { color: var(--accent); }
+
+    /* HERO */
+    .hero { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 24px 28px; margin-bottom: 26px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; }
+    .hero-name { font-size: 1.5rem; font-weight: 800; letter-spacing: -.025em; }
+    .hero-sub  { font-size: .78rem; color: var(--muted); margin-top: 4px; }
+    .hero-right { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+    .big-status { display: flex; align-items: center; gap: 9px; padding: 10px 20px; border-radius: 12px; font-size: .95rem; font-weight: 800; }
+    .big-status .dot { width: 10px; height: 10px; border-radius: 50%; background: currentColor; }
+    .big-status.on  { background: rgba(16,185,129,.12); color: var(--green); border: 1px solid rgba(16,185,129,.3); }
+    .big-status.off { background: rgba(90,112,152,.1);  color: var(--muted);  border: 1px solid rgba(90,112,152,.2); }
+    .big-status.on .dot { animation: lp 1.5s infinite; }
+    .session-pill { font-size: .78rem; color: var(--muted); background: var(--card2); border: 1px solid var(--border); border-radius: 10px; padding: 6px 14px; }
+    .session-pill span { color: var(--green); font-weight: 700; }
+
+    /* TABS */
+    .tabs { display: flex; gap: 3px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 5px; margin-bottom: 24px; width: fit-content; }
+    .tab { padding: 9px 26px; border-radius: 8px; border: none; cursor: pointer; font-size: .875rem; font-weight: 700; color: var(--muted); background: transparent; transition: all .18s; }
+    .tab.active { background: var(--accent); color: #fff; }
+    .tab:not(.active):hover { background: var(--card2); color: var(--text); }
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    /* DATE CONTROLS */
+    .dctl { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+    .dctl label { font-size: .78rem; color: var(--muted); }
+    .dinput { padding: 8px 14px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: .875rem; outline: none; cursor: pointer; transition: border-color .18s; }
+    .dinput:focus { border-color: var(--accent); }
+    .nbtn { padding: 8px 14px; background: var(--card2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); cursor: pointer; font-size: .875rem; transition: background .15s; font-weight: 600; }
+    .nbtn:hover { background: var(--border); }
+    .rng-label { font-size: .875rem; font-weight: 700; min-width: 170px; text-align: center; }
+
+    /* STAT CARDS */
+    .srow { display: grid; grid-template-columns: repeat(auto-fit, minmax(155px,1fr)); gap: 13px; margin-bottom: 22px; }
+    .sc { background: var(--card); border: 1px solid var(--border); border-radius: 13px; padding: 16px 18px; }
+    .sc-lbl { font-size: .68rem; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; }
+    .sc-val { font-size: 1.55rem; font-weight: 800; margin-top: 5px; line-height: 1; letter-spacing: -.025em; }
+    .sc-sub { font-size: .68rem; color: var(--muted); margin-top: 4px; }
+
+    /* 24H TIMELINE */
+    .tl-wrap { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px; margin-bottom: 22px; }
+    .tl-title { font-size: .78rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; }
+    .tl-hours { display: flex; margin-bottom: 6px; overflow: hidden; }
+    .tl-hours span { flex: 1; font-size: .62rem; color: var(--muted); }
+    .tl-bar {
+      position: relative; height: 40px; background: rgba(239,68,68,.07);
+      border-radius: 8px; overflow: hidden; border: 1px solid rgba(239,68,68,.18);
+    }
+    .tl-seg {
+      position: absolute; top: 0; height: 100%; background: var(--green);
+      border-radius: 3px; opacity: .9; cursor: pointer; transition: opacity .18s;
+    }
+    .tl-seg:hover { opacity: 1; }
+    .tl-seg.running { background: linear-gradient(90deg, var(--green), var(--yellow)); animation: runpulse 2s infinite; }
+    @keyframes runpulse { 0%,100%{opacity:.9} 50%{opacity:.65} }
+    .tl-legend { display: flex; gap: 16px; margin-top: 9px; }
+    .tl-li { display: flex; align-items: center; gap: 5px; font-size: .7rem; color: var(--muted); }
+    .tl-dot { width: 10px; height: 10px; border-radius: 2px; }
+
+    /* TABLE */
+    .tbl-wrap { background: var(--card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+    .tbl-hd { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .tbl-hd h3 { font-size: .88rem; font-weight: 800; }
+    .cnt-badge { font-size: .72rem; padding: 4px 10px; background: rgba(59,130,246,.1); color: var(--accent); border-radius: 20px; border: 1px solid rgba(59,130,246,.25); font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; }
+    thead th { padding: 10px 16px; font-size: .68rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); text-align: left; border-bottom: 1px solid var(--border); background: var(--card2); }
+    tbody td { padding: 11px 16px; font-size: .84rem; border-bottom: 1px solid rgba(28,46,82,.5); }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: var(--card2); }
+    .run-badge { display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:.7rem;font-weight:700;background:rgba(16,185,129,.1);color:var(--green);border:1px solid rgba(16,185,129,.25); }
+
+    /* WEEK BAR CHART */
+    .wk-chart { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 22px; margin-bottom: 22px; }
+    .wk-title { font-size: .78rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 20px; }
+    .wk-bars { display: grid; grid-template-columns: repeat(7,1fr); gap: 10px; height: 180px; align-items: flex-end; }
+    .wk-col { display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; justify-content: flex-end; }
+    .wk-barwrap { flex: 1; width: 100%; display: flex; align-items: flex-end; }
+    .wk-bar {
+      width: 100%; border-radius: 6px 6px 0 0; min-height: 4px;
+      background: linear-gradient(180deg, var(--accent), rgba(59,130,246,.3));
+      cursor: pointer; transition: background .18s; position: relative;
+    }
+    .wk-bar.today { background: linear-gradient(180deg, var(--green), rgba(16,185,129,.25)); }
+    .wk-bar:hover { filter: brightness(1.2); }
+    .wk-tip {
+      display: none; position: absolute; bottom: calc(100% + 7px); left: 50%; transform: translateX(-50%);
+      background: var(--card2); border: 1px solid var(--border); border-radius: 7px;
+      padding: 7px 11px; font-size: .7rem; white-space: nowrap; z-index: 10; pointer-events: none;
+      line-height: 1.5;
+    }
+    .wk-bar:hover .wk-tip { display: block; }
+    .wk-day { font-size: .68rem; color: var(--muted); font-weight: 700; }
+    .wk-hrs { font-size: .62rem; color: var(--accent); }
+    .wk-bar.today ~ .wk-hrs { color: var(--green); }
+
+    /* WEEK TABLE */
+    .wk-tbl { background: var(--card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin-bottom: 22px; }
+
+    /* MONTH CALENDAR */
+    .cal-wrap { background: var(--card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+    .cal-dows { display: grid; grid-template-columns: repeat(7,1fr); }
+    .cal-dow { text-align: center; padding: 10px 4px; font-size: .68rem; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; border-bottom: 1px solid var(--border); background: var(--card2); }
+    .cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 1px; background: var(--border); }
+    .cal-cell { background: var(--card); min-height: 82px; padding: 8px; cursor: pointer; transition: background .15s; }
+    .cal-cell:hover { background: var(--card2); }
+    .cal-cell.empty { background: rgba(7,11,18,.7); cursor: default; }
+    .cal-cell.today-c { box-shadow: inset 0 0 0 2px var(--accent); }
+    .cal-cell.sel-c { background: rgba(59,130,246,.07); }
+    .cal-dn { font-size: .78rem; font-weight: 700; margin-bottom: 4px; }
+    .cal-rt { font-size: .7rem; color: var(--green); }
+    .cal-cy { font-size: .62rem; color: var(--muted); }
+    .cal-heat { height: 4px; border-radius: 2px; margin-top: 5px; overflow: hidden; background: var(--card2); }
+    .cal-heat-fill { height: 100%; border-radius: 2px; }
+
+    /* LOADING / EMPTY */
+    .ld { display: flex; align-items: center; gap: 10px; padding: 30px 20px; color: var(--muted); font-size: .85rem; }
+    .spin { width: 18px; height: 18px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; flex-shrink: 0; }
+    @keyframes spin { to{transform:rotate(360deg)} }
+    .no-data { padding: 40px; text-align: center; color: var(--muted); font-size: .875rem; }
+
+    /* FOOTER */
+    footer { text-align: center; padding: 18px; font-size: .72rem; color: var(--muted); border-top: 1px solid var(--border); }
+
+    @media(max-width:700px){
+      .hdr { padding: 0 16px; }
+      main { padding: 18px 16px; }
+      .hero { flex-direction: column; align-items: flex-start; }
+      .srow { grid-template-columns: 1fr 1fr; }
+      .wk-bars { height: 120px; }
+      .cal-cell { min-height: 56px; padding: 5px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════ HEADER ══════ -->
+<header>
+  <div class="hdr">
+    <a href="/" class="logo">
+      <svg class="logo-svg" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="34" height="34" rx="9" fill="url(#lg2)"/>
+        <path d="M8 22l4.5-7 4 4.5 4.5-9 4 6" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="25.5" cy="10" r="2.8" fill="#10b981"/>
+        <defs><linearGradient id="lg2" x1="0" y1="0" x2="34" y2="34" gradientUnits="userSpaceOnUse"><stop stop-color="#3b82f6"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs>
+      </svg>
+      <span class="logo-text">MachineRuntimeData</span>
+    </a>
+    <div class="hdr-right">
+      <span class="clock" id="clock"></span>
+      <div class="live-badge"><span class="live-dot"></span>LIVE</div>
+    </div>
+  </div>
+</header>
+
+<!-- ══════ MAIN ══════ -->
+<main>
+  <a href="/" class="back">← All Devices</a>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div>
+      <div class="hero-name" id="hero-name">Loading…</div>
+      <div class="hero-sub">Device ID: <strong><%= device_id %></strong></div>
+    </div>
+    <div class="hero-right">
+      <div class="session-pill" id="session-pill">Session: <span>–</span></div>
+      <div class="big-status off" id="big-status">
+        <span class="dot"></span><span id="status-txt">–</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab active" onclick="sw('daily')">📅 Daily</button>
+    <button class="tab"        onclick="sw('weekly')">📆 Weekly</button>
+    <button class="tab"        onclick="sw('monthly')">🗓️ Monthly</button>
+  </div>
+
+  <!-- ══ DAILY ══ -->
+  <div class="panel active" id="p-daily">
+    <div class="dctl">
+      <label>Date</label>
+      <input type="date" class="dinput" id="d-date" onchange="loadDaily()">
+      <button class="nbtn" onclick="shDay(-1)">◀</button>
+      <button class="nbtn" onclick="shDay(1)">▶</button>
+      <button class="nbtn" onclick="goToday()">Today</button>
+    </div>
+
+    <div class="srow">
+      <div class="sc"><div class="sc-lbl">Total Cycles</div>  <div class="sc-val" id="d-cy" style="color:var(--accent)">–</div></div>
+      <div class="sc"><div class="sc-lbl">Total Runtime</div> <div class="sc-val" id="d-rt" style="color:var(--green)">–</div><div class="sc-sub" id="d-rt-sub"></div></div>
+      <div class="sc"><div class="sc-lbl">Downtime</div>      <div class="sc-val" id="d-dt" style="color:var(--red)">–</div></div>
+      <div class="sc"><div class="sc-lbl">Efficiency</div>    <div class="sc-val" id="d-ef" style="color:var(--yellow)">–</div></div>
+    </div>
+
+    <!-- Timeline -->
+    <div class="tl-wrap">
+      <div class="tl-title">
+        <span>24-Hour Activity Timeline</span>
+        <span id="tl-date" style="font-weight:400;letter-spacing:0"></span>
+      </div>
+      <div class="tl-hours" id="tl-hrs"></div>
+      <div class="tl-bar" id="tl-bar"><div class="ld"><div class="spin"></div>Loading…</div></div>
+      <div class="tl-legend">
+        <div class="tl-li"><div class="tl-dot" style="background:var(--green)"></div>Machine ON</div>
+        <div class="tl-li"><div class="tl-dot" style="background:rgba(239,68,68,.25)"></div>Machine OFF</div>
+        <div class="tl-li"><div class="tl-dot" style="background:linear-gradient(90deg,var(--green),var(--yellow))"></div>Currently Running</div>
+      </div>
+    </div>
+
+    <!-- Cycle Table -->
+    <div class="tbl-wrap">
+      <div class="tbl-hd">
+        <h3>Cycle Details</h3>
+        <span class="cnt-badge" id="d-cy-badge">0 cycles</span>
+      </div>
+      <div id="d-tbl"><div class="ld"><div class="spin"></div>Loading cycles…</div></div>
+    </div>
+  </div>
+
+  <!-- ══ WEEKLY ══ -->
+  <div class="panel" id="p-weekly">
+    <div class="dctl">
+      <button class="nbtn" onclick="shWk(-1)">◀ Prev</button>
+      <div class="rng-label" id="wk-lbl">–</div>
+      <button class="nbtn" onclick="shWk(1)">Next ▶</button>
+      <button class="nbtn" onclick="goThisWk()">This Week</button>
+    </div>
+
+    <div class="wk-chart">
+      <div class="wk-title">Daily Runtime (hours)</div>
+      <div class="wk-bars" id="wk-bars"><div class="ld" style="grid-column:1/-1"><div class="spin"></div></div></div>
+    </div>
+
+    <div class="wk-tbl tbl-wrap">
+      <div class="tbl-hd"><h3>Weekly Summary</h3></div>
+      <div id="wk-tbl"><div class="ld"><div class="spin"></div></div></div>
+    </div>
+  </div>
+
+  <!-- ══ MONTHLY ══ -->
+  <div class="panel" id="p-monthly">
+    <div class="dctl">
+      <button class="nbtn" onclick="shMo(-1)">◀ Prev</button>
+      <div class="rng-label" id="mo-lbl">–</div>
+      <button class="nbtn" onclick="shMo(1)">Next ▶</button>
+      <button class="nbtn" onclick="goThisMo()">This Month</button>
+    </div>
+
+    <div class="cal-wrap">
+      <div class="cal-dows">
+        <div class="cal-dow">Sun</div><div class="cal-dow">Mon</div><div class="cal-dow">Tue</div>
+        <div class="cal-dow">Wed</div><div class="cal-dow">Thu</div><div class="cal-dow">Fri</div>
+        <div class="cal-dow">Sat</div>
+      </div>
+      <div class="cal-grid" id="cal-grid">
+        <div class="ld" style="grid-column:1/-1"><div class="spin"></div>Loading…</div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ══════ FOOTER ══════ -->
+<footer>MachineTrack IoT Dashboard &nbsp;·&nbsp; <script>document.write(new Date().getFullYear())</script></footer>
+
+<!-- ══════ SCRIPT ══════ -->
+<script>
+  const DID = '<%= device_id %>';
+  const API = '/api';
+  const TODAY = new Date().toISOString().split('T')[0];
+
+  let dailyDate = TODAY;
+  let wkStart   = monOf(new Date());
+  let moDate    = new Date();
+
+  /* ─ Clock ─ */
+  (function tick(){
+    document.getElementById('clock').textContent = new Date().toLocaleString('en-IN',
+      { weekday:'short', day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit' });
+    setTimeout(tick, 1000);
+  })();
+
+  /* ─ Tabs ─ */
+  const tabs = ['daily','weekly','monthly'];
+  function sw(name) {
+    document.querySelectorAll('.tab').forEach((b,i) => b.classList.toggle('active', tabs[i] === name));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('p-' + name).classList.add('active');
+    if (name === 'weekly')  loadWeekly();
+    if (name === 'monthly') loadMonthly();
+  }
+
+  /* ─ Hero ─ */
+  async function loadHero() {
+    try {
+      const [devRes, rtRes] = await Promise.all([fetch(`${API}/devices`), fetch(`${API}/runtime/${DID}`)]);
+      const devs = await devRes.json();
+      const rt   = await rtRes.json();
+      const dev  = devs.find(d => d.device_id == DID);
+      if (dev) document.getElementById('hero-name').textContent = dev.machine_name;
+      const isOn = rt.current_status === 'ON';
+      const el   = document.getElementById('big-status');
+      el.className = 'big-status ' + (isOn ? 'on' : 'off');
+      document.getElementById('status-txt').textContent = rt.current_status || '–';
+      const sp = document.getElementById('session-pill');
+      if (isOn && rt.current_session > 0) {
+        sp.innerHTML = `Session: <span>${rt.current_session_formatted}</span>`;
+      } else {
+        sp.innerHTML = 'Session: <span style="color:var(--muted)">Idle</span>';
+      }
+    } catch(e) {}
+  }
+
+  /* ─ DAILY ─ */
+  function goToday()  { dailyDate = TODAY; document.getElementById('d-date').value = TODAY; loadDaily(); }
+  function shDay(n)   {
+    const d = new Date(dailyDate + 'T00:00:00'); d.setDate(d.getDate() + n);
+    if (d > new Date()) return;
+    dailyDate = d.toISOString().split('T')[0];
+    document.getElementById('d-date').value = dailyDate;
+    loadDaily();
+  }
+
+  async function loadDaily() {
+    dailyDate = document.getElementById('d-date').value || TODAY;
+    document.getElementById('tl-date').textContent = fmtDateShort(new Date(dailyDate + 'T00:00:00'));
+    ['d-cy','d-rt','d-dt','d-ef'].forEach(id => document.getElementById(id).textContent = '–');
+    document.getElementById('tl-bar').innerHTML = '<div class="ld"><div class="spin"></div>Loading…</div>';
+    document.getElementById('d-tbl').innerHTML  = '<div class="ld"><div class="spin"></div>Loading…</div>';
+    try {
+      const res  = await fetch(`${API}/cycles/${DID}?date=${dailyDate}`);
+      const data = await res.json();
+      document.getElementById('d-cy').textContent      = data.totalCycles;
+      document.getElementById('d-rt').textContent      = data.totalRuntimeFormatted;
+      document.getElementById('d-rt-sub').textContent  = (data.totalRuntime / 3600).toFixed(2) + ' hrs';
+      document.getElementById('d-dt').textContent      = data.downtimeFormatted;
+      document.getElementById('d-ef').textContent      = data.efficiencyPercent + '%';
+      document.getElementById('d-cy-badge').textContent = `${data.totalCycles} cycle${data.totalCycles !== 1 ? 's' : ''}`;
+      drawTimeline(data.cycles);
+      drawCycleTable(data.cycles);
+    } catch(e) {
+      document.getElementById('tl-bar').innerHTML = '<div class="no-data">Failed to load timeline.</div>';
+      document.getElementById('d-tbl').innerHTML  = '<div class="no-data">Failed to load cycles.</div>';
+    }
+  }
+
+  function drawTimeline(cycles) {
+    /* Hour labels */
+    const hrs = document.getElementById('tl-hrs');
+    hrs.innerHTML = '';
+    for (let i = 0; i <= 24; i += 3) {
+      const s = document.createElement('span');
+      s.textContent = i + ':00';
+      s.style.cssText = 'flex:1;font-size:.6rem;color:var(--muted)';
+      if (i === 24) s.style.cssText += ';text-align:right;flex:0 0 auto';
+      hrs.appendChild(s);
+    }
+    const bar = document.getElementById('tl-bar');
+    if (!cycles.length) {
+      bar.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:.8rem;color:var(--muted)">No activity on this date</div>';
+      return;
+    }
+    bar.innerHTML = cycles.map(c => `
+      <div class="tl-seg ${c.isRunning ? 'running' : ''}"
+           style="left:${c.startPercent}%;width:${Math.max(0.15, parseFloat(c.widthPercent))}%"
+           title="Cycle #${c.cycleNumber}: ${c.startTime} → ${c.endTime || 'running'} (${c.durationFormatted})">
+      </div>`).join('');
+  }
+
+  function drawCycleTable(cycles) {
+    const wrap = document.getElementById('d-tbl');
+    if (!cycles.length) {
+      wrap.innerHTML = '<div class="no-data">No cycles recorded for this date.</div>';
+      return;
+    }
+    const rows = cycles.map((c, i) => {
+      const gap = (!c.isRunning && cycles[i+1]) ? calcGap(c.endTime, cycles[i+1].startTime) : '–';
+      return `<tr>
+        <td style="color:var(--muted)">${c.cycleNumber}</td>
+        <td style="color:var(--green)">${c.startTime}</td>
+        <td>${c.endTime ? c.endTime : '<span class="run-badge">● Running</span>'}</td>
+        <td style="color:var(--yellow);font-weight:700">${c.durationFormatted}</td>
+        <td style="color:var(--muted)">${gap}</td>
+      </tr>`;
+    }).join('');
+    wrap.innerHTML = `<table>
+      <thead><tr><th>#</th><th>Start Time</th><th>End Time</th><th>ON Duration</th><th>OFF Gap (next cycle)</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+  }
+
+  function calcGap(endStr, nextStr) {
+    try {
+      const b = TODAY;
+      const diff = Math.floor((new Date(`${b} ${nextStr}`) - new Date(`${b} ${endStr}`)) / 1000);
+      return isNaN(diff) || diff < 0 ? '–' : fmtSec(diff);
+    } catch { return '–'; }
+  }
+
+  /* ─ WEEKLY ─ */
+  function monOf(d) {
+    const day = d.getDay(), diff = d.getDate() - day + (day === 0 ? -6 : 1);
+    return new Date(new Date(d).setDate(diff));
+  }
+  function sunOf(mon) { return new Date(new Date(mon).setDate(mon.getDate() + 6)); }
+  function goThisWk() { wkStart = monOf(new Date()); loadWeekly(); }
+  function shWk(n)    { wkStart = new Date(wkStart.setDate(wkStart.getDate() + n * 7)); loadWeekly(); }
+
+  async function loadWeekly() {
+    const end     = sunOf(new Date(wkStart));
+    const startS  = ds(wkStart), endS = ds(end);
+    document.getElementById('wk-lbl').textContent = `${fmtDateShort(wkStart)} – ${fmtDateShort(end)}`;
+    document.getElementById('wk-bars').innerHTML = '<div class="ld" style="grid-column:1/-1"><div class="spin"></div></div>';
+    document.getElementById('wk-tbl').innerHTML  = '<div class="ld"><div class="spin"></div></div>';
+    try {
+      const res  = await fetch(`${API}/daily-summary/${DID}?start=${startS}&end=${endS}`);
+      const data = await res.json();
+      drawWkBars(data.days);
+      drawWkTable(data.days);
+    } catch {
+      document.getElementById('wk-bars').innerHTML = '<div class="no-data" style="grid-column:1/-1">Failed to load.</div>';
+    }
+  }
+
+  function drawWkBars(days) {
+    const maxSec = Math.max(...days.map(d => d.runtime_seconds), 1);
+    document.getElementById('wk-bars').innerHTML = days.map(d => {
+      const pct  = (d.runtime_seconds / maxSec * 100).toFixed(1);
+      const dObj = new Date(d.date + 'T00:00:00');
+      const dayN = dObj.toLocaleDateString('en-US', { weekday: 'short' });
+      const dayD = dObj.getDate();
+      const isT  = d.date === TODAY;
+      return `<div class="wk-col">
+        <div class="wk-barwrap">
+          <div class="wk-bar ${isT ? 'today' : ''}" style="height:${Math.max(2, parseFloat(pct))}%"
+               onclick="jumpToDay('${d.date}')">
+            <div class="wk-tip">${d.date}<br>Runtime: ${d.runtime_formatted}<br>Cycles: ${d.cycle_count}<br>Eff: ${d.efficiency_percent}%</div>
+          </div>
+        </div>
+        <div class="wk-day">${dayN} ${dayD}</div>
+        <div class="wk-hrs" style="color:${isT ? 'var(--green)' : 'var(--accent)'}">${d.runtime_hours}h</div>
+      </div>`;
+    }).join('');
+  }
+
+  function drawWkTable(days) {
+    const totSec = days.reduce((a, d) => a + d.runtime_seconds, 0);
+    const totCy  = days.reduce((a, d) => a + d.cycle_count, 0);
+    const rows   = days.map(d => {
+      const dow  = new Date(d.date + 'T00:00:00').toLocaleDateString('en-US', { weekday:'short', day:'2-digit', month:'short' });
+      const col  = heatColor(parseFloat(d.efficiency_percent));
+      return `<tr>
+        <td>${dow}</td>
+        <td style="color:var(--accent)">${d.cycle_count}</td>
+        <td style="color:var(--green)">${d.runtime_formatted}</td>
+        <td>${d.runtime_hours}h</td>
+        <td>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="flex:1;height:6px;background:var(--card2);border-radius:3px;overflow:hidden">
+              <div style="height:100%;width:${d.efficiency_percent}%;background:${col};border-radius:3px"></div>
+            </div>
+            <span style="font-size:.72rem;color:var(--muted);min-width:36px">${d.efficiency_percent}%</span>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+    document.getElementById('wk-tbl').innerHTML = `<table>
+      <thead><tr><th>Day</th><th>Cycles</th><th>Runtime</th><th>Hours</th><th>Efficiency</th></tr></thead>
+      <tbody>
+        ${rows}
+        <tr style="background:var(--card2);font-weight:700">
+          <td>Total / Avg</td>
+          <td style="color:var(--accent)">${totCy}</td>
+          <td style="color:var(--green)">${fmtSec(totSec)}</td>
+          <td>${(totSec/3600).toFixed(2)}h</td>
+          <td style="color:var(--muted)">–</td>
+        </tr>
+      </tbody>
+    </table>`;
+  }
+
+  function jumpToDay(date) { dailyDate = date; document.getElementById('d-date').value = date; sw('daily'); }
+
+  /* ─ MONTHLY ─ */
+  function goThisMo() { moDate = new Date(); loadMonthly(); }
+  function shMo(n)    { moDate = new Date(moDate.getFullYear(), moDate.getMonth() + n, 1); loadMonthly(); }
+
+  async function loadMonthly() {
+    const y = moDate.getFullYear(), m = moDate.getMonth();
+    document.getElementById('mo-lbl').textContent =
+      moDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    const startS = `${y}-${pad(m+1)}-01`;
+    const last   = new Date(y, m+1, 0).getDate();
+    const endS   = `${y}-${pad(m+1)}-${pad(last)}`;
+    document.getElementById('cal-grid').innerHTML = '<div class="ld" style="grid-column:1/-1"><div class="spin"></div>Loading…</div>';
+    try {
+      const res  = await fetch(`${API}/daily-summary/${DID}?start=${startS}&end=${endS}`);
+      const data = await res.json();
+      drawCal(y, m, data.days);
+    } catch {
+      document.getElementById('cal-grid').innerHTML = '<div class="no-data" style="grid-column:1/-1">Failed to load.</div>';
+    }
+  }
+
+  function drawCal(y, m, days) {
+    const mp   = {};
+    days.forEach(d => { mp[d.date] = d; });
+    const firstDow = new Date(y, m, 1).getDay();
+    const lastDay  = new Date(y, m+1, 0).getDate();
+    let html = '';
+    for (let i = 0; i < firstDow; i++) html += '<div class="cal-cell empty"><div class="cal-dn"></div></div>';
+    for (let d = 1; d <= lastDay; d++) {
+      const dateStr = `${y}-${pad(m+1)}-${pad(d)}`;
+      const info    = mp[dateStr] || { runtime_seconds:0, cycle_count:0, runtime_formatted:'–', efficiency_percent:'0.0' };
+      const isT     = dateStr === TODAY;
+      const col     = heatColor(parseFloat(info.efficiency_percent));
+      html += `
+        <div class="cal-cell ${isT ? 'today-c' : ''}" onclick="calClick(this,'${dateStr}')">
+          <div class="cal-dn" style="color:${isT ? 'var(--accent)' : 'var(--text)'}">${d}</div>
+          ${info.runtime_seconds > 0
+            ? `<div class="cal-rt">${info.runtime_formatted}</div>
+               <div class="cal-cy">${info.cycle_count} cycle${info.cycle_count!==1?'s':''}</div>
+               <div class="cal-heat"><div class="cal-heat-fill" style="width:${info.efficiency_percent}%;background:${col}"></div></div>`
+            : `<div class="cal-cy" style="color:var(--border)">No data</div>`}
+        </div>`;
+    }
+    document.getElementById('cal-grid').innerHTML = html;
+  }
+
+  function calClick(el, date) {
+    document.querySelectorAll('.sel-c').forEach(c => c.classList.remove('sel-c'));
+    el.classList.add('sel-c');
+    jumpToDay(date);
+  }
+
+  /* ─ HELPERS ─ */
+  function fmtSec(s) {
+    if (s <= 0) return '0s';
+    const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
+    return h > 0 ? `${h}h ${m}m ${sec}s` : m > 0 ? `${m}m ${sec}s` : `${sec}s`;
+  }
+  function fmtDateShort(d) { return d.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }); }
+  function ds(d) { return d instanceof Date ? d.toISOString().split('T')[0] : d; }
+  function pad(n) { return String(n).padStart(2,'0'); }
+  function heatColor(p) {
+    if (p <= 0)  return 'var(--border)';
+    if (p < 20)  return '#ef4444';
+    if (p < 40)  return '#f59e0b';
+    if (p < 70)  return '#3b82f6';
+    return '#10b981';
+  }
+
+  /* ─ INIT ─ */
+  document.getElementById('d-date').value = TODAY;
+  loadHero();
+  loadDaily();
+  setInterval(loadHero, 15000);
+</script>
+</body>
+</html>
+
+
+
+
+
