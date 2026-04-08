@@ -1,0 +1,233 @@
+/* app/styles/components.css */
+
+/* Device Card Styles */
+.d-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+
+.d-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(59,130,246,.5);
+  box-shadow: 0 10px 40px rgba(59,130,246,.12);
+}
+
+.dc-top {
+  padding: 20px 20px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.dc-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  flex-shrink: 0;
+  background: rgba(59,130,246,.1);
+  border: 1px solid rgba(59,130,246,.2);
+}
+
+.dc-info {
+  flex: 1;
+  margin-top: 2px;
+}
+
+.dc-name {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.dc-id {
+  font-size: 0.7rem;
+  color: var(--muted);
+  margin-top: 3px;
+}
+
+.sbadge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.sbadge .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.sbadge.on {
+  background: rgba(16,185,129,.12);
+  color: var(--green);
+  border: 1px solid rgba(16,185,129,.3);
+}
+
+.sbadge.on .dot {
+  animation: livepulse 1.6s infinite;
+}
+
+.sbadge.off {
+  background: rgba(90,112,152,.1);
+  color: var(--muted);
+  border: 1px solid rgba(90,112,152,.2);
+}
+
+.dc-sep {
+  height: 1px;
+  background: var(--border);
+}
+
+.dc-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  padding: 14px 20px;
+}
+
+.dc-m {
+  text-align: center;
+}
+
+.dc-m + .dc-m {
+  border-left: 1px solid var(--border);
+}
+
+.dc-ml {
+  font-size: 0.65rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.dc-mv {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+.dc-eff {
+  padding: 0 20px 16px;
+}
+
+.eff-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.68rem;
+  color: var(--muted);
+  margin-bottom: 5px;
+}
+
+.eff-track {
+  height: 5px;
+  background: var(--card2);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.eff-fill {
+  height: 100%;
+  border-radius: 10px;
+  background: linear-gradient(90deg, var(--accent), var(--green));
+  transition: width 0.6s ease;
+}
+
+.dc-foot {
+  margin-top: auto;
+  padding: 12px 20px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.view-lnk {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--accent);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: gap 0.18s;
+}
+
+.view-lnk:hover {
+  gap: 9px;
+}
+
+/* Button styles */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 10px 20px;
+  border-radius: 10px;
+  border: none;
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 22px rgba(59,130,246,.35);
+}
+
+.btn-ghost {
+  background: var(--card2);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.btn-ghost:hover {
+  background: var(--border);
+}
+
+/* Flash messages */
+.flash {
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  margin-top: 12px;
+}
+
+.flash.ok {
+  background: rgba(16,185,129,.1);
+  color: var(--green);
+  border: 1px solid rgba(16,185,129,.25);
+}
+
+.flash.err {
+  background: rgba(239,68,68,.1);
+  color: var(--red);
+  border: 1px solid rgba(239,68,68,.25);
+}
+
+.flash.info {
+  background: rgba(59,130,246,.1);
+  color: var(--accent);
+  border: 1px solid rgba(59,130,246,.25);
+}

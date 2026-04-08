@@ -1,22 +1,32 @@
-
-const express = require('express');
-const router = express.Router();
+const express    = require('express');
+const router     = express.Router();
 const controller = require('./controller');
+const { authenticateToken } = require('./config/auth');
 
-// Device management
-router.post('/register',                  controller.registerDevice);
-router.get('/devices',                    controller.getDevices);
+const validateDeviceId = (req, res, next) => {
+    const { device_id } = req.params;
+    if (!device_id || device_id === 'undefined' || device_id === 'null') {
+        return res.status(400).json({ error: 'Invalid device_id parameter' });
+    }
+    next();
+};
 
-// Runtime & status
-router.get('/runtime/:device_id',         controller.getRuntime);
+// ─── PUBLIC ───────────────────────────────────────────────────────────────────
+router.post('/login', controller.login);
 
-// Cycles for a specific date  (?date=YYYY-MM-DD, defaults to today)
-router.get('/cycles/:device_id',          controller.getCycles);
+// ─── PROTECTED ────────────────────────────────────────────────────────────────
+router.post('/register',          authenticateToken, controller.registerDevice);
+router.get('/devices',            authenticateToken, controller.getDevices);
+router.get('/all-daily-runtime',                     controller.getAllDailyRuntime);
 
-// Daily summary for a date range  (?start=YYYY-MM-DD&end=YYYY-MM-DD)
-router.get('/daily-summary/:device_id',   controller.getDailySummary);
+router.get('/device/:device_id',  authenticateToken, validateDeviceId, controller.getDevice);
 
-// All devices summary for a given date  (?date=YYYY-MM-DD)
-router.get('/all-daily-runtime',          controller.getAllDailyRuntime);
+router.put('/device/:device_id/threshold',  validateDeviceId, controller.updateDeviceThreshold);
+router.post('/device/:device_id/push-config', authenticateToken, validateDeviceId, controller.pushDeviceConfig);
+
+router.get('/threshold/:device_id',    validateDeviceId, controller.getThreshold);
+router.get('/runtime/:device_id',      validateDeviceId, controller.getRuntime);
+router.get('/cycles/:device_id',       validateDeviceId, controller.getCycles);
+router.get('/daily-summary/:device_id',validateDeviceId, controller.getDailySummary);
 
 module.exports = router;

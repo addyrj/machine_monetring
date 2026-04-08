@@ -1,0 +1,22 @@
+{
+  "name": "frontend",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+   "scripts": {
+    "dev": "next dev -H 0.0.0.0",
+    "build": "next build",
+    "start": "next start -H 0.0.0.0",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "next": "16.2.2",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "jsqr": "^1.4.0"
+  },
+  "devDependencies": {
+    "eslint": "^9",
+    "eslint-config-next": "16.2.2"
+  }
+}

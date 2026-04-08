@@ -1,16 +1,21 @@
 const express = require('express');
-const cors = require('cors');
-const path = require('path');
+const cors    = require('cors');
+const path    = require('path');
 require('dotenv').config();
 
 const app = express();
 
-// View engine
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-// Middleware
-app.use(cors());
+// app.use(cors({
+//     origin:      process.env.FRONTEND_URL || 'http://localhost:3000',
+//     credentials: true
+// }));
+app.use(cors({
+  origin: true,
+  credentials: true
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -20,13 +25,21 @@ app.use((req, res, next) => {
 });
 
 // ─── PAGE ROUTES ──────────────────────────────────────────────────────────────
+app.get('/login', (req, res) => {
+    res.render('pages/login', { title: 'Sign In – MachineTrack' });
+});
+
 app.get('/', (req, res) => {
     res.render('pages/dashboard', { title: 'MachineTrack – Dashboard' });
 });
 
+app.get('/setup', (req, res) => {
+    res.render('pages/setup', { title: 'Add Device – MachineTrack' });
+});
+
 app.get('/device/:device_id', (req, res) => {
     res.render('pages/device', {
-        title: `Device ${req.params.device_id}`,
+        title:     `Device ${req.params.device_id}`,
         device_id: req.params.device_id
     });
 });
@@ -58,5 +71,7 @@ app.listen(PORT, async () => {
     const { connectMQTT } = require('./config/mqttClient');
     connectMQTT();
 
-    console.log(`🚀 Server running → http://localhost:${PORT}\n`);
+    console.log(`🚀 Server running  → http://localhost:${PORT}`);
+    console.log(`🔐 Login page      → http://localhost:${PORT}/login`);
+    console.log(`📱 Setup page      → http://localhost:${PORT}/setup\n`);
 });

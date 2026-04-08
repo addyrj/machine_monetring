@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:#070b12; --surface:#0d1526; --card:#111d35; --card2:#162240;
+      --border:#1c2e52; --text:#e2e8f0; --muted:#5a7098;
+      --accent:#3b82f6; --green:#10b981; --red:#ef4444; --yellow:#f59e0b;
+    }
+    body { background:var(--bg); color:var(--text); font-family:'Segoe UI',system-ui,sans-serif; min-height:100vh; display:flex; flex-direction:column; }
+    header { background:var(--surface); border-bottom:1px solid var(--border); position:sticky; top:0; z-index:100; }
+    .hdr { max-width:700px; margin:0 auto; padding:0 24px; height:62px; display:flex; align-items:center; justify-content:space-between; }
+    .logo { display:flex; align-items:center; gap:10px; text-decoration:none; }
+    .logo-svg { width:32px; height:32px; }
+    .logo-text { font-size:1.1rem; font-weight:800; background:linear-gradient(135deg,#3b82f6,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .back-lnk { font-size:.82rem; color:var(--muted); text-decoration:none; transition:color .15s; }
+    .back-lnk:hover { color:var(--accent); }
+    main { flex:1; max-width:700px; margin:0 auto; padding:32px 24px; width:100%; }
+    h1 { font-size:1.45rem; font-weight:800; margin-bottom:6px; }
+    .sub { color:var(--muted); font-size:.84rem; margin-bottom:30px; }
+
+    /* Steps */
+    .steps { display:flex; margin-bottom:32px; }
+    .step { flex:1; display:flex; flex-direction:column; align-items:center; gap:6px; position:relative; }
+    .step:not(:last-child)::after { content:''; position:absolute; top:15px; left:calc(50% + 18px); right:calc(-50% + 18px); height:2px; background:var(--border); transition:background .3s; }
+    .step.done::after { background:var(--accent); }
+    .step-num { width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.78rem; font-weight:800; background:var(--card2); border:2px solid var(--border); color:var(--muted); transition:all .3s; }
+    .step.active .step-num { background:var(--accent); border-color:var(--accent); color:#fff; }
+    .step.done   .step-num { background:var(--green);  border-color:var(--green);  color:#fff; }
+    .step-lbl { font-size:.65rem; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; }
+    .step.active .step-lbl, .step.done .step-lbl { color:var(--text); }
+
+    /* Panels */
+    .panel { display:none; animation:fadeIn .25s ease; }
+    .panel.active { display:block; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+
+    /* Card */
+    .card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:28px; }
+
+    /* QR Scanner */
+    .qr-outer { display:flex; flex-direction:column; align-items:center; gap:16px; margin-bottom:24px; }
+    .qr-wrap { position:relative; width:280px; height:280px; border-radius:14px; overflow:hidden; background:#000; border:2px solid var(--border); }
+    #qr-video { width:100%; height:100%; object-fit:cover; display:block; }
+    .qr-overlay { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; pointer-events:none; }
+    .qr-frame { width:180px; height:180px; border:2.5px solid var(--accent); border-radius:14px; box-shadow:0 0 0 2000px rgba(0,0,0,.45); }
+    .qr-corners { position:absolute; inset:0; pointer-events:none; }
+    .qr-status { font-size:.8rem; color:var(--muted); text-align:center; }
+    .qr-status.scanning { color:var(--accent); }
+    .qr-status.found    { color:var(--green); font-weight:700; }
+    .divider { display:flex; align-items:center; gap:12px; margin:4px 0 20px; }
+    .divider::before, .divider::after { content:''; flex:1; height:1px; background:var(--border); }
+    .divider span { font-size:.75rem; color:var(--muted); }
+
+    /* Form */
+    .fgrp { margin-bottom:16px; }
+    .fgrp label { display:block; font-size:.72rem; font-weight:700; color:var(--muted); margin-bottom:7px; text-transform:uppercase; letter-spacing:.05em; }
+    .fgrp input { width:100%; padding:11px 14px; background:var(--surface); border:1px solid var(--border); border-radius:10px; color:var(--text); font-size:.9rem; outline:none; transition:border-color .18s, box-shadow .18s; }
+    .fgrp input:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(59,130,246,.12); }
+    .fgrp input[readonly] { opacity:.55; cursor:not-allowed; }
+    .row2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .hint { font-size:.7rem; color:var(--muted); margin-top:5px; }
+
+    /* Threshold slider */
+    .thr-wrap { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:14px 16px; }
+    .thr-row { display:flex; align-items:center; gap:14px; margin-top:10px; }
+    .thr-val { font-size:1.3rem; font-weight:800; color:var(--accent); min-width:65px; text-align:right; }
+    input[type=range] { flex:1; height:6px; accent-color:var(--accent); cursor:pointer; }
+
+    /* Buttons */
+    .btn { display:inline-flex; align-items:center; justify-content:center; gap:7px; padding:11px 22px; border-radius:10px; border:none; font-size:.875rem; font-weight:700; cursor:pointer; transition:all .18s; width:100%; }
+    .btn-primary { background:var(--accent); color:#fff; }
+    .btn-primary:hover { background:#2563eb; transform:translateY(-1px); box-shadow:0 6px 20px rgba(59,130,246,.3); }
+    .btn-ghost { background:var(--card2); color:var(--text); border:1px solid var(--border); }
+    .btn-ghost:hover { background:var(--border); }
+    .btn-row { display:flex; gap:10px; margin-top:20px; }
+    .btn-row .btn { flex:1; }
+    .btn:disabled { opacity:.5; cursor:not-allowed; transform:none; box-shadow:none; }
+
+    /* Flash */
+    .flash { padding:10px 14px; border-radius:8px; font-size:.8rem; margin-top:12px; }
+    .flash.ok  { background:rgba(16,185,129,.1); color:var(--green); border:1px solid rgba(16,185,129,.25); }
+    .flash.err { background:rgba(239,68,68,.1);  color:var(--red);   border:1px solid rgba(239,68,68,.25); }
+    .flash.info { background:rgba(59,130,246,.1); color:var(--accent); border:1px solid rgba(59,130,246,.25); }
+
+    /* Done screen */
+    .done-icon { font-size:3rem; margin-bottom:14px; }
+    .done-title { font-size:1.3rem; font-weight:800; margin-bottom:8px; }
+    .done-sub { color:var(--muted); font-size:.84rem; margin-bottom:24px; }
+    .sum-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:24px; }
+    .sum-item { background:var(--card2); border-radius:10px; padding:13px 15px; }
+    .sum-lbl { font-size:.68rem; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; }
+    .sum-val { font-size:.95rem; font-weight:700; margin-top:4px; word-break:break-all; }
+
+    /* MQTT status pill */
+    .mqtt-pill { display:inline-flex; align-items:center; gap:5px; padding:4px 12px; border-radius:20px; font-size:.72rem; font-weight:700; margin-top:8px; }
+    .mqtt-pill.sent { background:rgba(16,185,129,.1); color:var(--green); border:1px solid rgba(16,185,129,.25); }
+    .mqtt-pill.fail { background:rgba(239,68,68,.1);  color:var(--red);   border:1px solid rgba(239,68,68,.25); }
+
+    footer { text-align:center; padding:18px; font-size:.72rem; color:var(--muted); border-top:1px solid var(--border); }
+    @media(max-width:500px){
+      .row2 { grid-template-columns:1fr; }
+      .sum-grid { grid-template-columns:1fr; }
+      .qr-wrap { width:240px; height:240px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="hdr">
+    <a href="/" class="logo">
+      <svg class="logo-svg" viewBox="0 0 34 34" fill="none">
+        <rect width="34" height="34" rx="9" fill="url(#slg)"/>
+        <path d="M8 22l4.5-7 4 4.5 4.5-9 4 6" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="25.5" cy="10" r="2.8" fill="#10b981"/>
+        <defs><linearGradient id="slg" x1="0" y1="0" x2="34" y2="34" gradientUnits="userSpaceOnUse"><stop stop-color="#3b82f6"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs>
+      </svg>
+      <span class="logo-text">Machine Runtime</span>
+    </a>
+    <a href="/" class="back-lnk">← Dashboard</a>
+  </div>
+</header>
+
+<main>
+  <h1>Add New Device</h1>
+  <p class="sub">Scan the QR code on your device, register it, then push WiFi credentials and current threshold over MQTT.</p>
+
+  <!-- Step indicators -->
+  <div class="steps">
+    <div class="step active" id="s1"><div class="step-num">1</div><div class="step-lbl">Scan QR</div></div>
+    <div class="step"        id="s2"><div class="step-num">2</div><div class="step-lbl">Register</div></div>
+    <div class="step"        id="s3"><div class="step-num">3</div><div class="step-lbl">Configure</div></div>
+    <div class="step"        id="s4"><div class="step-num">✓</div><div class="step-lbl">Done</div></div>
+  </div>
+
+  <!-- ── STEP 1: QR Scan ── -->
+  <div class="panel active card" id="p1">
+    <div class="qr-outer">
+      <div class="qr-wrap">
+        <video id="qr-video" autoplay playsinline muted></video>
+        <div class="qr-overlay"><div class="qr-frame"></div></div>
+      </div>
+      <div class="qr-status scanning" id="qr-status">📷 Point camera at device QR code…</div>
+    </div>
+    <canvas id="qr-canvas" style="display:none"></canvas>
+    <div class="divider"><span>or enter manually</span></div>
+    <div class="fgrp">
+      <label>Device ID</label>
+      <input id="manual-id" placeholder="e.g. 1234" autocomplete="off">
+    </div>
+    <div id="fl1"></div>
+    <button class="btn btn-primary" id="btn-next1" onclick="step1Next()" disabled>Continue →</button>
+  </div>
+
+  <!-- ── STEP 2: Register ── -->
+  <div class="panel card" id="p2">
+    <div class="fgrp">
+      <label>Device ID</label>
+      <input id="reg-did" readonly>
+    </div>
+    <div class="fgrp">
+      <label>Machine Name</label>
+      <input id="reg-name" placeholder="e.g. Pump Motor A">
+    </div>
+    <div class="row2">
+      <div class="fgrp">
+        <label>Min Current (A)</label>
+        <input id="reg-min" type="number" value="0" min="0" step="0.1">
+      </div>
+      <div class="fgrp">
+        <label>Max Current (A)</label>
+        <input id="reg-max" type="number" value="20" min="0.1" step="0.1">
+      </div>
+    </div>
+    <p class="hint">Min/Max define the valid range for the threshold slider in the next step.</p>
+    <div id="fl2"></div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" onclick="goStep(1)">← Back</button>
+      <button class="btn btn-primary" onclick="doRegister()">Register Device →</button>
+    </div>
+  </div>
+
+  <!-- ── STEP 3: Configure (MQTT push) ── -->
+  <div class="panel card" id="p3">
+    <p style="font-size:.82rem;color:var(--muted);margin-bottom:22px;">
+      This config is sent directly to <strong id="cfg-did-label" style="color:var(--text)"></strong> via MQTT
+      (<code style="font-size:.78rem;color:var(--accent)">machine/{id}/control</code>).
+      The device will apply these settings immediately.
+    </p>
+
+    <div class="fgrp">
+      <label>WiFi SSID</label>
+      <input id="cfg-ssid" placeholder="Your WiFi network name" autocomplete="off">
+    </div>
+    <div class="fgrp">
+      <label>WiFi Password</label>
+      <input id="cfg-pass" type="password" placeholder="Your WiFi password" autocomplete="new-password">
+    </div>
+
+    <div class="fgrp" style="margin-top:20px">
+      <label>Current Threshold</label>
+      <div class="thr-wrap">
+        <p class="hint" style="margin:0 0 4px">Machine is ON when current exceeds this value</p>
+        <div class="thr-row">
+          <input type="range" id="cfg-thr" min="0" max="20" step="0.1" value="0.5"
+                 oninput="document.getElementById('thr-out').textContent = parseFloat(this.value).toFixed(1) + ' A'">
+          <div class="thr-val" id="thr-out">0.5 A</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="fl3"></div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" onclick="goStep(2)">← Back</button>
+      <button class="btn btn-primary" onclick="doConfigure()">📡 Send Config to Device</button>
+    </div>
+  </div>
+
+  <!-- ── STEP 4: Done ── -->
+  <div class="panel card" id="p4" style="text-align:center;padding:36px 28px;">
+    <div class="done-icon">✅</div>
+    <div class="done-title">Device Ready!</div>
+    <div class="done-sub">Configuration has been sent to the device via MQTT.<br>The device will apply it and start sending data.</div>
+    <div class="sum-grid" style="text-align:left">
+      <div class="sum-item"><div class="sum-lbl">Device ID</div>   <div class="sum-val" id="done-id">–</div></div>
+      <div class="sum-item"><div class="sum-lbl">Machine</div>     <div class="sum-val" id="done-name">–</div></div>
+      <div class="sum-item"><div class="sum-lbl">Threshold</div>   <div class="sum-val" id="done-thr">–</div></div>
+      <div class="sum-item"><div class="sum-lbl">WiFi SSID</div>   <div class="sum-val" id="done-ssid">–</div></div>
+    </div>
+    <div id="mqtt-status"></div>
+    <div class="btn-row" style="justify-content:center">
+      <a href="/" class="btn btn-primary" style="text-decoration:none;max-width:200px">Go to Dashboard</a>
+      <button class="btn btn-ghost" onclick="startOver()" style="max-width:200px">Add Another</button>
+    </div>
+  </div>
+</main>
+
+<footer>Machine Runtime Track &nbsp;·&nbsp; <script>document.write(new Date().getFullYear())</script></footer>
+
+<script>
+  const API = '/api';
+
+  // ── Auth guard ───────────────────────────────────────────────────────────────
+  const token = localStorage.getItem('token');
+  if (!token) { window.location.href = '/login'; }
+
+  function authHeaders() {
+    return {
+      'Content-Type':  'application/json',
+      'Authorization': 'Bearer ' + token
+    };
+  }
+
+  let scannedId = '';
+  let regName   = '';
+
+  // ── Step navigation ──────────────────────────────────────────────────────────
+  function goStep(n) {
+    [1, 2, 3, 4].forEach(i => {
+      document.getElementById('p' + i).classList.toggle('active', i === n);
+      const s = document.getElementById('s' + i);
+      s.classList.toggle('active', i === n);
+      s.classList.toggle('done',   i < n);
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // ── QR Camera ────────────────────────────────────────────────────────────────
+  let cameraStream = null;
+
+  (async () => {
+    try {
+      cameraStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width: { ideal: 640 }, height: { ideal: 640 } }
+      });
+      const video = document.getElementById('qr-video');
+      video.srcObject = cameraStream;
+      await video.play();
+      scanFrame();
+    } catch (e) {
+      document.getElementById('qr-status').textContent = '⚠️ Camera unavailable — enter ID manually';
+      document.getElementById('qr-status').className  = 'qr-status';
+    }
+  })();
+
+  function scanFrame() {
+    const video  = document.getElementById('qr-video');
+    const canvas = document.getElementById('qr-canvas');
+    const ctx    = canvas.getContext('2d');
+    if (video.readyState === video.HAVE_ENOUGH_DATA) {
+      canvas.width  = video.videoWidth;
+      canvas.height = video.videoHeight;
+      ctx.drawImage(video, 0, 0);
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const code      = jsQR(imageData.data, imageData.width, imageData.height,
+                             { inversionAttempts: 'dontInvert' });
+      if (code && code.data.trim()) {
+        stopCamera();
+        setScannedId(code.data.trim(), true);
+        return;
+      }
+    }
+    requestAnimationFrame(scanFrame);
+  }
+
+  function stopCamera() {
+    if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
+  }
+
+  document.getElementById('manual-id').addEventListener('input', function () {
+    const val = this.value.trim();
+    if (val) setScannedId(val, false);
+    else { scannedId = ''; document.getElementById('btn-next1').disabled = true; }
+  });
+
+  function setScannedId(id, fromQR) {
+    scannedId = id;
+    document.getElementById('manual-id').value      = id;
+    document.getElementById('btn-next1').disabled   = false;
+    if (fromQR) {
+      document.getElementById('qr-status').textContent = '✅ QR scanned: ' + id;
+      document.getElementById('qr-status').className  = 'qr-status found';
+    }
+  }
+
+  function step1Next() {
+    if (!scannedId) {
+      document.getElementById('fl1').innerHTML = '<div class="flash err">Please scan QR or enter a Device ID.</div>';
+      return;
+    }
+    document.getElementById('reg-did').value = scannedId;
+    stopCamera();
+    goStep(2);
+  }
+
+  // ── Register ─────────────────────────────────────────────────────────────────
+  async function doRegister() {
+    const name = document.getElementById('reg-name').value.trim();
+    const min  = parseFloat(document.getElementById('reg-min').value);
+    const max  = parseFloat(document.getElementById('reg-max').value);
+    const fl   = document.getElementById('fl2');
+
+    if (!name)              { fl.innerHTML = '<div class="flash err">Machine name is required.</div>';          return; }
+    if (isNaN(min)||isNaN(max)) { fl.innerHTML = '<div class="flash err">Enter valid min/max values.</div>';   return; }
+    if (min >= max)         { fl.innerHTML = '<div class="flash err">Max current must be greater than min.</div>'; return; }
+
+    fl.innerHTML = '<div class="flash info">Registering…</div>';
+    try {
+      const midVal = parseFloat(((min + max) / 2).toFixed(1));
+      const res    = await fetch(`${API}/register`, {
+        method:  'POST',
+        headers: authHeaders(),
+        body:    JSON.stringify({
+          device_id: scannedId, machine_name: name,
+          min_current: min, max_current: max, current_threshold: midVal
+        })
+      });
+      const data = await res.json();
+      if (res.status === 401 || res.status === 403) { doLogout(); return; }
+      if (!res.ok) { fl.innerHTML = `<div class="flash err">❌ ${data.error}</div>`; return; }
+
+      regName = name;
+      fl.innerHTML = '<div class="flash ok">✅ Device registered!</div>';
+
+      const thrSlider         = document.getElementById('cfg-thr');
+      thrSlider.min           = min;
+      thrSlider.max           = max;
+      thrSlider.step          = 0.1;
+      thrSlider.value         = midVal;
+      document.getElementById('thr-out').textContent       = midVal.toFixed(1) + ' A';
+      document.getElementById('cfg-did-label').textContent = scannedId;
+      setTimeout(() => goStep(3), 800);
+    } catch (e) {
+      fl.innerHTML = '<div class="flash err">❌ Network error.</div>';
+    }
+  }
+
+  // ── Push config via MQTT ──────────────────────────────────────────────────────
+  async function doConfigure() {
+    const ssid = document.getElementById('cfg-ssid').value.trim();
+    const pass = document.getElementById('cfg-pass').value;
+    const thr  = parseFloat(document.getElementById('cfg-thr').value);
+    const fl   = document.getElementById('fl3');
+
+    fl.innerHTML = '<div class="flash info">📡 Sending config to device…</div>';
+    try {
+      const body = { current_threshold: thr };
+      if (ssid) body.wifi_ssid     = ssid;
+      if (pass) body.wifi_password = pass;
+
+      const res  = await fetch(`${API}/device/${encodeURIComponent(scannedId)}/push-config`, {
+        method: 'POST', headers: authHeaders(), body: JSON.stringify(body)
+      });
+      const data = await res.json();
+      if (res.status === 401 || res.status === 403) { doLogout(); return; }
+      if (!res.ok) { fl.innerHTML = `<div class="flash err">❌ ${data.error}</div>`; return; }
+
+      document.getElementById('done-id').textContent   = scannedId;
+      document.getElementById('done-name').textContent = regName;
+      document.getElementById('done-thr').textContent  = thr.toFixed(1) + ' A';
+      document.getElementById('done-ssid').textContent = ssid || '(not set)';
+      document.getElementById('mqtt-status').innerHTML = data.mqtt_published
+        ? '<span class="mqtt-pill sent">📡 MQTT config sent successfully</span>'
+        : '<span class="mqtt-pill fail">⚠️ MQTT not connected — config saved to DB only</span>';
+      goStep(4);
+    } catch (e) {
+      fl.innerHTML = '<div class="flash err">❌ Network error.</div>';
+    }
+  }
+
+  function doLogout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('username');
+    window.location.href = '/login';
+  }
+
+  function startOver() {
+    scannedId = ''; regName = '';
+    ['manual-id','reg-name','cfg-ssid','cfg-pass'].forEach(id => document.getElementById(id).value = '');
+    ['fl1','fl2','fl3'].forEach(id => document.getElementById(id).innerHTML = '');
+    document.getElementById('btn-next1').disabled     = true;
+    document.getElementById('qr-status').textContent  = '📷 Point camera at device QR code…';
+    document.getElementById('qr-status').className    = 'qr-status scanning';
+    goStep(1);
+    location.reload();
+  }
+</script>
+</body>
+</html>

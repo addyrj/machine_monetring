@@ -1,0 +1,64 @@
+/* app/styles/login.css */
+.login-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 24px;
+}
+
+.login-box {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 36px 32px;
+  width: 100%;
+  max-width: 420px;
+}
+
+.login-title {
+  font-size: 1.4rem;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+
+.login-sub {
+  font-size: 0.83rem;
+  color: var(--muted);
+  margin-bottom: 28px;
+}
+
+.form-group {
+  margin-bottom: 18px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--muted);
+  margin-bottom: 7px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 12px 14px;
+}
+
+.spin-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.spin {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255,255,255,.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}

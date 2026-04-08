@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:#070b12; --surface:#0d1526; --card:#111d35; --card2:#162240;
+      --border:#1c2e52; --text:#e2e8f0; --muted:#5a7098;
+      --accent:#3b82f6; --green:#10b981; --red:#ef4444;
+    }
+    body { background:var(--bg); color:var(--text); font-family:'Segoe UI',system-ui,sans-serif; min-height:100vh; display:flex; flex-direction:column; }
+    header { background:var(--surface); border-bottom:1px solid var(--border); }
+    .hdr { max-width:500px; margin:0 auto; padding:0 24px; height:62px; display:flex; align-items:center; }
+    .logo { display:flex; align-items:center; gap:10px; text-decoration:none; }
+    .logo-svg { width:32px; height:32px; }
+    .logo-text { font-size:1.1rem; font-weight:800; background:linear-gradient(135deg,#3b82f6,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    main { flex:1; display:flex; align-items:center; justify-content:center; padding:32px 24px; }
+    .login-box { background:var(--card); border:1px solid var(--border); border-radius:18px; padding:36px 32px; width:100%; max-width:420px; }
+    .login-title { font-size:1.4rem; font-weight:800; margin-bottom:6px; }
+    .login-sub { font-size:.83rem; color:var(--muted); margin-bottom:28px; }
+    .fgrp { margin-bottom:18px; }
+    .fgrp label { display:block; font-size:.72rem; font-weight:700; color:var(--muted); margin-bottom:7px; text-transform:uppercase; letter-spacing:.05em; }
+    .fgrp input { width:100%; padding:12px 14px; background:var(--surface); border:1px solid var(--border); border-radius:10px; color:var(--text); font-size:.9rem; outline:none; transition:border-color .18s, box-shadow .18s; }
+    .fgrp input:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(59,130,246,.12); }
+    .btn { width:100%; padding:12px; border-radius:10px; border:none; font-size:.9rem; font-weight:700; cursor:pointer; transition:all .18s; }
+    .btn-primary { background:var(--accent); color:#fff; }
+    .btn-primary:hover { background:#2563eb; transform:translateY(-1px); box-shadow:0 6px 20px rgba(59,130,246,.3); }
+    .btn-primary:disabled { opacity:.6; transform:none; box-shadow:none; cursor:not-allowed; }
+    .flash { padding:10px 14px; border-radius:8px; font-size:.8rem; margin-bottom:16px; }
+    .flash.err { background:rgba(239,68,68,.1); color:var(--red); border:1px solid rgba(239,68,68,.25); }
+    .spin-wrap { display:flex; align-items:center; justify-content:center; gap:8px; }
+    .spin { width:16px; height:16px; border:2px solid rgba(255,255,255,.3); border-top-color:#fff; border-radius:50%; animation:spin .7s linear infinite; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    footer { text-align:center; padding:18px; font-size:.72rem; color:var(--muted); border-top:1px solid var(--border); }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="hdr">
+    <a href="/login" class="logo">
+      <svg class="logo-svg" viewBox="0 0 34 34" fill="none">
+        <rect width="34" height="34" rx="9" fill="url(#llg)"/>
+        <path d="M8 22l4.5-7 4 4.5 4.5-9 4 6" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="25.5" cy="10" r="2.8" fill="#10b981"/>
+        <defs><linearGradient id="llg" x1="0" y1="0" x2="34" y2="34" gradientUnits="userSpaceOnUse"><stop stop-color="#3b82f6"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs>
+      </svg>
+      <span class="logo-text">Machine Runtime</span>
+    </a>
+  </div>
+</header>
+
+<main>
+  <div class="login-box">
+    <div class="login-title">Welcome back</div>
+    <div class="login-sub">Sign in to manage your machines</div>
+    <div id="fl"></div>
+    <div class="fgrp">
+      <label>Username</label>
+      <input id="username" type="text" placeholder="Enter username" autocomplete="username"
+             onkeydown="if(event.key==='Enter') doLogin()">
+    </div>
+    <div class="fgrp">
+      <label>Password</label>
+      <input id="password" type="password" placeholder="Enter password" autocomplete="current-password"
+             onkeydown="if(event.key==='Enter') doLogin()">
+    </div>
+    <button class="btn btn-primary" id="login-btn" onclick="doLogin()">Sign In</button>
+  </div>
+</main>
+
+<footer>Machine Runtime Track &nbsp;·&nbsp; <script>document.write(new Date().getFullYear())</script></footer>
+
+<script>
+  // If already logged in, redirect to dashboard
+  if (localStorage.getItem('token')) {
+    window.location.href = '/';
+  }
+
+  async function doLogin() {
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value;
+    const fl       = document.getElementById('fl');
+    const btn      = document.getElementById('login-btn');
+
+    if (!username || !password) {
+      fl.innerHTML = '<div class="flash err">Username and password are required.</div>';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spin-wrap"><div class="spin"></div>Signing in…</div>';
+
+    try {
+      const res  = await fetch('/api/login', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ username, password })
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        fl.innerHTML = `<div class="flash err">❌ ${data.error}</div>`;
+        btn.disabled = false;
+        btn.textContent = 'Sign In';
+        return;
+      }
+
+      // Save token and user info
+      localStorage.setItem('token',    data.token);
+      localStorage.setItem('username', data.user.username);
+
+      // Redirect to dashboard
+      window.location.href = '/';
+    } catch (e) {
+      fl.innerHTML = '<div class="flash err">❌ Network error. Is the server running?</div>';
+      btn.disabled = false;
+      btn.textContent = 'Sign In';
+    }
+  }
+</script>
+</body>
+</html>
