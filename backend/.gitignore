@@ -4,3 +4,8 @@ node_modules/
 # 2. register multiple device.
 # 4.and current set according to us 0 to 99
 # 5.and wifi set according to us like not hard coded. -->
+
+# adityaranjan@Adityas-MacBook-Air:~% mosquitto_sub -h mqtt.rank2top.in -p 1883 -t "machine_control" -v
+
+# ngrok config add-authtoken 3C7ODaZS0O7Cz0YTOFIJphPOxfU_fgzXLGpDcfs3bx1u47SS
+# ngrok http 5000

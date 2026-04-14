@@ -1,0 +1,47 @@
+machine-runtime-backend/
+├── server.js (or index.js)
+├── route.js
+├── controller.js
+├── model.js
+├── config/
+│   ├── db.js
+│   ├── auth.js
+│   └── mqttClient.js
+├── package.json
+└── .env
+
+
+
+machine-runtime-frontend/
+├── app/
+│   ├── layout.js
+│   ├── page.js
+│   ├── login/
+│   │   └── page.js
+│   ├── setup/
+│   │   └── page.js
+│   ├── qr-generate/
+│   │   └── page.js
+│   ├── device/
+│   │   └── [id]/
+│   │       └── page.js
+│   ├── components/
+│   │   ├── Header.js
+│   │   ├── Footer.js
+│   │   └── DeviceCard.js
+│   ├── hooks/
+│   │   └── useAuth.js
+│   └── styles/
+│       ├── globals.css
+│       ├── login.css
+│       ├── dashboard.css
+│       ├── setup.css
+│       ├── device.css
+│       ├── components.css
+│       └── qr-generate.css
+├── public/
+│   └── (static assets if any)
+├── package.json
+├── next.config.js
+├── jsconfig.json (or tsconfig.json)
+└── .env.local

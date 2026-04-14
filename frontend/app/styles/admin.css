@@ -1,0 +1,493 @@
+/* Admin Pages Styles */
+
+/* ─── ADMIN MAIN LAYOUT ─────────────────────────────────────────────────── */
+.admin-main {
+  flex: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 32px 24px 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.admin-header {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.admin-header h1 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--text), var(--accent2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+}
+
+.admin-header p {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+/* ─── ADMIN CARD ────────────────────────────────────────────────────────── */
+.admin-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ─── GENERATOR SECTION ─────────────────────────────────────────────────── */
+.generator-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.input-with-display {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.input-with-display .form-input {
+  flex: 1;
+  max-width: 120px;
+}
+
+.count-display {
+  font-size: 0.9rem;
+  color: var(--accent2);
+  font-weight: 600;
+  font-family: 'DM Mono', monospace;
+  min-width: 80px;
+}
+
+.form-select {
+  width: 100%;
+  padding: 12px 14px;
+  background: var(--card);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.form-select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.generate-btn {
+  width: 100%;
+  justify-content: center;
+  padding: 14px;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+/* ─── GENERATED SECTION ─────────────────────────────────────────────────── */
+.generated-section {
+  border-top: 1px solid var(--border);
+  padding-top: 24px;
+  margin-top: 8px;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.generated-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.generated-header h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+}
+
+.generated-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.generated-actions .btn {
+  min-width: 120px;
+  justify-content: center;
+  font-size: 0.85rem;
+  padding: 10px 16px;
+}
+
+/* ─── QR GRID PREVIEW ───────────────────────────────────────────────────── */
+.qr-grid-preview {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 16px;
+  padding: 20px 0;
+  margin-bottom: 20px;
+}
+
+.qr-preview-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: all 0.2s ease;
+}
+
+.qr-preview-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
+.qr-preview-card img {
+  width: 120px;
+  height: 120px;
+  border-radius: 8px;
+  background: white;
+  padding: 6px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.qr-preview-id {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--accent2);
+  text-align: center;
+  word-break: break-all;
+}
+
+.qr-preview-index {
+  font-size: 0.68rem;
+  color: var(--muted);
+}
+
+/* ─── DEVICE IDS SECTION ────────────────────────────────────────────────── */
+.device-ids-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.device-ids-section h4 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+}
+
+.ids-textarea {
+  width: 100%;
+  min-height: 150px;
+  padding: 12px;
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.85rem;
+  resize: vertical;
+}
+
+.ids-textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+/* ─── INFO CARD ─────────────────────────────────────────────────────────── */
+.info-card {
+  background: rgba(59,130,246,0.08);
+  border: 1px solid rgba(59,130,246,0.2);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+}
+
+.info-card h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--accent2);
+  margin-bottom: 12px;
+}
+
+.info-list {
+  margin-left: 20px;
+  color: var(--muted);
+  font-size: 0.85rem;
+  line-height: 1.7;
+}
+
+.info-list li {
+  margin-bottom: 8px;
+}
+
+/* ─── DEVICES PAGE ──────────────────────────────────────────────────────── */
+.devices-main {
+  flex: 1;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 32px 24px 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.page-header h1 {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.page-header p {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+/* ─── FILTER TABS ───────────────────────────────────────────────────────── */
+.filter-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.filter-tab {
+  padding: 8px 16px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all .2s;
+}
+
+.filter-tab.active {
+  background: var(--accent);
+  color: white;
+}
+
+.filter-tab:hover:not(.active) {
+  color: var(--text);
+  background: rgba(255,255,255,0.05);
+}
+
+/* ─── DEVICES TABLE ─────────────────────────────────────────────────────── */
+.devices-table-wrapper {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.devices-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.devices-table thead {
+  background: var(--card2);
+  border-bottom: 1px solid var(--border);
+}
+
+.devices-table th {
+  padding: 16px;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-right: 1px solid var(--border);
+}
+
+.devices-table th:last-child {
+  border-right: none;
+}
+
+.devices-table td {
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+}
+
+.devices-table td:last-child {
+  border-right: none;
+}
+
+.devices-table tbody tr:hover {
+  background: var(--card2);
+}
+
+.device-name {
+  font-weight: 500;
+}
+
+.device-id code {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.8rem;
+  color: var(--accent2);
+  background: var(--card2);
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.btn-icon {
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--card2);
+  color: var(--text);
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-icon:hover {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+.btn-icon-danger:hover {
+  background: var(--red) !important;
+  border-color: var(--red) !important;
+}
+
+/* ─── RESPONSIVE ────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .admin-main {
+    padding: 20px 16px 40px;
+  }
+
+  .admin-header h1 {
+    font-size: 1.4rem;
+  }
+
+  .admin-card {
+    padding: 20px;
+  }
+
+  .qr-grid-preview {
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 12px;
+  }
+
+  .qr-preview-card img {
+    width: 100px;
+    height: 100px;
+  }
+
+  .devices-main {
+    padding: 20px 16px 40px;
+  }
+
+  .page-header {
+    flex-direction: column;
+  }
+
+  .devices-table {
+    font-size: 0.8rem;
+  }
+
+  .devices-table th,
+  .devices-table td {
+    padding: 12px 8px;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+  }
+
+  .btn-icon {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-main {
+    padding: 16px 12px 30px;
+  }
+
+  .qr-grid-preview {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .generated-actions {
+    flex-direction: column;
+  }
+
+  .generated-actions .btn {
+    width: 100%;
+  }
+
+  .filter-tabs {
+    flex-direction: column;
+  }
+
+  .filter-tab {
+    width: 100%;
+    text-align: center;
+  }
+
+  .devices-table {
+    font-size: 0.75rem;
+  }
+
+  .device-name,
+  .device-id code {
+    display: none;
+  }
+}

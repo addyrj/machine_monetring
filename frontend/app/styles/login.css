@@ -1,64 +1,53 @@
 /* app/styles/login.css */
-.login-container {
+.login-page {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 32px 24px;
+  padding: 40px 20px;
+  background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(99,102,241,0.12) 0%, transparent 70%);
 }
 
-.login-box {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 18px;
-  padding: 36px 32px;
+.login-card {
   width: 100%;
-  max-width: 420px;
+  max-width: 380px;
+  background: var(--card);
+  border: 1px solid var(--border2);
+  border-radius: 16px;
+  padding: 36px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.login-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+}
+
+.login-brand-icon {
+  width: 52px; height: 52px;
+  background: linear-gradient(135deg, var(--accent), #8b5cf6);
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
 }
 
 .login-title {
   font-size: 1.4rem;
-  font-weight: 800;
-  margin-bottom: 6px;
+  font-weight: 600;
 }
-
 .login-sub {
-  font-size: 0.83rem;
+  font-size: 0.82rem;
   color: var(--muted);
-  margin-bottom: 28px;
 }
 
-.form-group {
-  margin-bottom: 18px;
-}
+.login-fields { display: flex; flex-direction: column; gap: 16px; }
 
-.form-group label {
-  display: block;
+.login-footer {
+  text-align: center;
   font-size: 0.72rem;
-  font-weight: 700;
-  color: var(--muted);
-  margin-bottom: 7px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.form-group input {
-  width: 100%;
-  padding: 12px 14px;
-}
-
-.spin-wrap {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
-.spin {
-  width: 16px;
-  height: 16px;
-  border: 2px solid rgba(255,255,255,.3);
-  border-top-color: #fff;
-  border-radius: 50%;
-  animation: spin 0.7s linear infinite;
+  color: var(--muted2);
 }

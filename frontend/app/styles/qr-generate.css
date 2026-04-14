@@ -1,0 +1,372 @@
+/* QR Generate Page Styles */
+.qr-generate-main {
+  flex: 1;
+  max-width: 900px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 32px 24px 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+/* QR Header - Improved */
+.qr-header {
+  text-align: center;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.back-link {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: var(--muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 16px;
+  text-decoration: none;
+}
+
+.back-link:hover {
+  color: var(--accent2);
+  background: rgba(99,102,241,0.1);
+  transform: translateX(-2px);
+}
+
+.back-link svg {
+  width: 14px;
+  height: 14px;
+}
+
+.qr-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--text), var(--accent2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+}
+
+.qr-subtitle {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+/* Tabs */
+.qr-tabs {
+  display: flex;
+  gap: 8px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 6px;
+}
+
+.qr-tab {
+  flex: 1;
+  padding: 10px 16px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .2s;
+}
+
+.qr-tab.active {
+  background: var(--card2);
+  color: var(--accent2);
+}
+
+.qr-tab:hover:not(.active) {
+  color: var(--text);
+  background: rgba(255,255,255,0.05);
+}
+
+/* QR Card */
+.qr-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* QR Section */
+.qr-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.qr-info {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  background: var(--card2);
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--accent);
+}
+
+.info-icon {
+  font-size: 2rem;
+}
+
+.info-text h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.info-text p {
+  font-size: 0.8rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+/* Form Select */
+.form-select {
+  width: 100%;
+  padding: 12px 14px;
+  background: var(--card);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.form-select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.generate-btn {
+  width: 100%;
+  justify-content: center;
+  padding: 12px;
+  font-size: 1rem;
+}
+
+/* QR Display */
+.qr-display {
+  border-top: 1px solid var(--border);
+  padding-top: 24px;
+  margin-top: 8px;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.qr-display-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.qr-display-header h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--green);
+}
+
+.qr-badge {
+  padding: 4px 12px;
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-bd);
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-family: 'DM Mono', monospace;
+  color: var(--accent2);
+}
+
+.qr-image-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 24px;
+  background: var(--card2);
+  border-radius: var(--radius);
+  margin-bottom: 20px;
+}
+
+.qr-image-large {
+  width: 250px;
+  height: 250px;
+  border-radius: 16px;
+  background: white;
+  padding: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+
+.qr-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.qr-instructions {
+  background: rgba(59,130,246,0.08);
+  border: 1px solid rgba(59,130,246,0.2);
+  border-radius: var(--radius-sm);
+  padding: 16px 20px;
+}
+
+.qr-instructions h4 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: var(--accent2);
+}
+
+.qr-instructions ol {
+  margin-left: 20px;
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.6;
+}
+
+.qr-instructions li {
+  margin-bottom: 6px;
+}
+
+/* Recent Devices */
+.recent-devices {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+
+.recent-devices h3 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.device-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.device-list-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all .2s;
+}
+
+.device-list-item:hover {
+  border-color: var(--accent);
+  transform: translateX(4px);
+}
+
+.device-list-item.selected {
+  border-color: var(--accent);
+  background: rgba(59,130,246,0.1);
+}
+
+.device-icon {
+  font-size: 1.2rem;
+}
+
+.device-info {
+  flex: 1;
+}
+
+.device-name {
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.device-id-mono {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+
+.check-mark {
+  color: var(--green);
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .qr-generate-main {
+    padding: 20px 16px 40px;
+  }
+  
+  .qr-title {
+    font-size: 1.4rem;
+  }
+  
+  .qr-card {
+    padding: 20px;
+  }
+  
+  .qr-image-large {
+    width: 180px;
+    height: 180px;
+  }
+  
+  .qr-actions {
+    flex-direction: column;
+  }
+  
+  .qr-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .back-link {
+    position: static;
+    margin-bottom: 16px;
+    display: inline-flex;
+  }
+  
+  .qr-header {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

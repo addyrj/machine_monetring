@@ -1,34 +1,533 @@
-'use client';
+// // app/device/[id]/page.js
+// ENHANCED: Better modal integration, improved UX, polished styling
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
-import Header from '../../components/Header';
-import Footer from '../../components/Footer';
-import { useAuth } from '../../hooks/useAuth';
+import { useState, useEffect } from "react";
+import Link from 'next/link';
+import { useParams } from "next/navigation";
+import Header from "../../components/Header";
+import Footer from "../../components/Footer";
+import { useAuth } from "../../hooks/useAuth";
 
+// ─── WiFi Configuration Modal ──────────────────────────────────────────────────
+function WiFiConfigModal({ device, onSuccess, onClose }) {
+  const { getAuthHeaders, logout } = useAuth();
+  const [wifiSsid, setWifiSsid] = useState("");
+  const [wifiPassword, setWifiPassword] = useState("");
+  const [showPass, setShowPass] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [flash, setFlash] = useState({ type: "", msg: "" });
+
+  const handleSave = async () => {
+    if (!wifiSsid.trim()) {
+      setFlash({ type: "err", msg: "WiFi SSID is required" });
+      return;
+    }
+
+    setLoading(true);
+    setFlash({ type: "", msg: "" });
+
+    try {
+      const res = await fetch(
+        `/api/device/${encodeURIComponent(device.device_id)}/wifi`,
+        {
+          method: "PUT",
+          headers: getAuthHeaders(),
+          body: JSON.stringify({
+            wifi_ssid: wifiSsid.trim(),
+            wifi_password: wifiPassword.trim(),
+          }),
+        },
+      );
+
+      if (res.status === 401 || res.status === 403) {
+        logout();
+        return;
+      }
+
+      const data = await res.json();
+      if (!res.ok) {
+        setFlash({
+          type: "err",
+          msg: data.error || "Failed to save WiFi config",
+        });
+        setLoading(false);
+        return;
+      }
+
+      onSuccess(data);
+    } catch (err) {
+      setFlash({ type: "err", msg: "Network error" });
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 999,
+        background: "rgba(0,0,0,0.65)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "20px",
+        backdropFilter: "blur(4px)",
+      }}
+    >
+      <div
+        style={{
+          background: "var(--card)",
+          border: "1px solid var(--border2)",
+          borderRadius: "16px",
+          padding: "28px",
+          width: "100%",
+          maxWidth: "420px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "20px",
+          boxShadow: "0 24px 64px rgba(0,0,0,0.5)",
+        }}
+      >
+        {/* Header */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "flex-start",
+            justifyContent: "space-between",
+          }}
+        >
+          <div>
+            <div style={{ fontSize: "1.1rem", fontWeight: 600 }}>
+              Update WiFi Configuration
+            </div>
+            <div
+              style={{
+                fontSize: "0.78rem",
+                color: "var(--muted)",
+                marginTop: 4,
+              }}
+            >
+              Device:{" "}
+              <span style={{ color: "var(--accent2)", fontWeight: 600 }}>
+                {device.machine_name}
+              </span>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            style={{
+              background: "none",
+              border: "none",
+              color: "var(--muted)",
+              fontSize: "1.2rem",
+              cursor: "pointer",
+              lineHeight: 1,
+              padding: "2px 4px",
+            }}
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Device ID */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            padding: "10px 14px",
+            background: "var(--card2)",
+            border: "1px solid var(--border)",
+            borderRadius: "8px",
+          }}
+        >
+          <div style={{ fontSize: "1.2rem" }}>📱</div>
+          <div
+            style={{
+              fontFamily: "'DM Mono', monospace",
+              fontSize: "0.72rem",
+              color: "var(--muted)",
+            }}
+          >
+            {device.device_id}
+          </div>
+        </div>
+
+        {/* WiFi SSID */}
+        <div className="form-group">
+          <label className="form-label">WiFi Network Name (SSID)</label>
+          <input
+            type="text"
+            className="form-input"
+            placeholder="Your WiFi network name"
+            value={wifiSsid}
+            onChange={(e) => setWifiSsid(e.target.value)}
+            autoComplete="off"
+          />
+        </div>
+
+        {/* WiFi Password */}
+        <div className="form-group">
+          <label className="form-label">WiFi Password</label>
+          <div style={{ position: "relative" }}>
+            <input
+              type={showPass ? "text" : "password"}
+              className="form-input"
+              placeholder="Your WiFi password"
+              value={wifiPassword}
+              onChange={(e) => setWifiPassword(e.target.value)}
+              autoComplete="off"
+              style={{ paddingRight: "44px" }}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPass((p) => !p)}
+              style={{
+                position: "absolute",
+                right: 10,
+                top: "50%",
+                transform: "translateY(-50%)",
+                background: "none",
+                border: "none",
+                color: "var(--muted)",
+                cursor: "pointer",
+                fontSize: "0.75rem",
+                padding: "4px",
+              }}
+            >
+              {showPass ? "Hide" : "Show"}
+            </button>
+          </div>
+        </div>
+
+        {flash.msg && <div className={`flash ${flash.type}`}>{flash.msg}</div>}
+
+        {/* Buttons */}
+        <div style={{ display: "flex", gap: 10 }}>
+          <button
+            className="btn btn-ghost"
+            style={{ flex: 1, justifyContent: "center" }}
+            onClick={onClose}
+            disabled={loading}
+          >
+            Cancel
+          </button>
+          <button
+            className="btn btn-primary"
+            style={{ flex: 1, justifyContent: "center" }}
+            onClick={handleSave}
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <span className="spinner"></span> Saving…
+              </>
+            ) : (
+              "📡 Save & Send"
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Threshold Modal ───────────────────────────────────────────────────────────
+function ThresholdModal({ device, currentThreshold = 5, onSuccess, onClose }) {
+  const { getAuthHeaders, logout } = useAuth();
+  const [threshold, setThreshold] = useState(currentThreshold);
+  const [loading, setLoading] = useState(false);
+  const [flash, setFlash] = useState({ type: "", msg: "" });
+
+  const MIN = 0;
+  const MAX = 99;
+
+  const handleSave = async () => {
+    setLoading(true);
+    setFlash({ type: "", msg: "" });
+
+    try {
+      const res = await fetch(
+        `/api/device/${encodeURIComponent(device.device_id)}/threshold`,
+        {
+          method: "PUT",
+          headers: getAuthHeaders(),
+          body: JSON.stringify({ current_threshold: threshold }),
+        },
+      );
+
+      if (res.status === 401 || res.status === 403) {
+        logout();
+        return;
+      }
+
+      const data = await res.json();
+      if (!res.ok) {
+        setFlash({ type: "err", msg: data.error || "Failed to set threshold" });
+        setLoading(false);
+        return;
+      }
+
+      onSuccess(data);
+    } catch (err) {
+      setFlash({ type: "err", msg: "Network error" });
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 999,
+        background: "rgba(0,0,0,0.65)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "20px",
+        backdropFilter: "blur(4px)",
+      }}
+    >
+      <div
+        style={{
+          background: "var(--card)",
+          border: "1px solid var(--border2)",
+          borderRadius: "16px",
+          padding: "28px",
+          width: "100%",
+          maxWidth: "420px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "20px",
+          boxShadow: "0 24px 64px rgba(0,0,0,0.5)",
+        }}
+      >
+        {/* Header */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "flex-start",
+            justifyContent: "space-between",
+          }}
+        >
+          <div>
+            <div style={{ fontSize: "1.1rem", fontWeight: 600 }}>
+              Set Current Threshold
+            </div>
+            <div
+              style={{
+                fontSize: "0.78rem",
+                color: "var(--muted)",
+                marginTop: 4,
+              }}
+            >
+              Device:{" "}
+              <span style={{ color: "var(--accent2)", fontWeight: 600 }}>
+                {device.machine_name}
+              </span>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            style={{
+              background: "none",
+              border: "none",
+              color: "var(--muted)",
+              fontSize: "1.2rem",
+              cursor: "pointer",
+              lineHeight: 1,
+              padding: "2px 4px",
+            }}
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Device ID */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            padding: "10px 14px",
+            background: "var(--card2)",
+            border: "1px solid var(--border)",
+            borderRadius: "8px",
+          }}
+        >
+          <div style={{ fontSize: "1.2rem" }}>⚙️</div>
+          <div
+            style={{
+              fontFamily: "'DM Mono', monospace",
+              fontSize: "0.72rem",
+              color: "var(--muted)",
+            }}
+          >
+            {device.device_id}
+          </div>
+        </div>
+
+        {/* Big threshold display */}
+        <div style={{ textAlign: "center", padding: "8px 0" }}>
+          <div
+            style={{
+              fontSize: "3rem",
+              fontWeight: 700,
+              fontFamily: "'DM Mono', monospace",
+              color: "var(--accent2)",
+              lineHeight: 1,
+            }}
+          >
+            {threshold.toFixed(1)}
+          </div>
+          <div
+            style={{ fontSize: "1rem", color: "var(--muted)", marginTop: 4 }}
+          >
+            Amperes (A)
+          </div>
+        </div>
+
+        {/* Slider */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <input
+            type="range"
+            min={MIN}
+            max={MAX}
+            step="0.5"
+            value={threshold}
+            onChange={(e) => setThreshold(parseFloat(e.target.value))}
+            style={{ width: "100%" }}
+          />
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              fontFamily: "'DM Mono', monospace",
+              fontSize: "0.7rem",
+              color: "var(--muted2)",
+            }}
+          >
+            <span>{MIN} A</span>
+            <span>{MAX} A</span>
+          </div>
+        </div>
+
+        {/* Info row */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: 10,
+          }}
+        >
+          {[
+            {
+              label: "Below threshold",
+              value: `0 – ${threshold.toFixed(1)} A`,
+              color: "var(--muted)",
+              status: "OFF",
+            },
+            {
+              label: "Above threshold",
+              value: `${threshold.toFixed(1)} – ${MAX} A`,
+              color: "var(--green)",
+              status: "ON",
+            },
+          ].map((item) => (
+            <div
+              key={item.status}
+              style={{
+                padding: "10px 12px",
+                background: "var(--card2)",
+                borderRadius: "8px",
+                border: "1px solid var(--border)",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: "0.68rem",
+                  color: "var(--muted)",
+                  marginBottom: 4,
+                }}
+              >
+                {item.label}
+              </div>
+              <div
+                style={{
+                  fontFamily: "'DM Mono', monospace",
+                  fontSize: "0.78rem",
+                  fontWeight: 600,
+                  color: item.color,
+                }}
+              >
+                {item.value}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {flash.msg && <div className={`flash ${flash.type}`}>{flash.msg}</div>}
+
+        {/* Buttons */}
+        <div style={{ display: "flex", gap: 10 }}>
+          <button
+            className="btn btn-ghost"
+            style={{ flex: 1, justifyContent: "center" }}
+            onClick={onClose}
+            disabled={loading}
+          >
+            Cancel
+          </button>
+          <button
+            className="btn btn-primary"
+            style={{ flex: 1, justifyContent: "center" }}
+            onClick={handleSave}
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <span className="spinner"></span> Saving…
+              </>
+            ) : (
+              "✅ Save Threshold"
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── MAIN DEVICE PAGE ──────────────────────────────────────────────────────────
 export default function DevicePage() {
   const params = useParams();
   const deviceId = params.id;
   const { getAuthHeaders, logout } = useAuth();
-  
+
   const [device, setDevice] = useState(null);
   const [status, setStatus] = useState(null);
   const [dailyData, setDailyData] = useState(null);
   const [weeklyData, setWeeklyData] = useState([]);
   const [monthlyData, setMonthlyData] = useState([]);
-  const [activeTab, setActiveTab] = useState('daily');
-  const [dailyDate, setDailyDate] = useState('');
+  const [activeTab, setActiveTab] = useState("daily");
+  const [dailyDate, setDailyDate] = useState("");
   const [wkStart, setWkStart] = useState(null);
   const [moDate, setMoDate] = useState(null);
   const [loading, setLoading] = useState(true);
   const [pgCycles, setPgCycles] = useState([]);
   const [pgPage, setPgPage] = useState(1);
   const [isMounted, setIsMounted] = useState(false);
+  const [wifiModalOpen, setWifiModalOpen] = useState(false);
+  const [thresholdModalOpen, setThresholdModalOpen] = useState(false);
+  const [flash, setFlash] = useState({ type: "", msg: "" });
   const PG_SIZE = 10;
 
   const getTodayString = () => {
     const today = new Date();
-    return today.toISOString().split('T')[0];
+    return today.toISOString().split("T")[0];
   };
 
   const getMonday = (date) => {
@@ -39,24 +538,28 @@ export default function DevicePage() {
   };
 
   const formatDate = (d) => {
-    if (!d) return '';
-    return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+    if (!d) return "";
+    return d.toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
   };
-  
+
   const formatSeconds = (s) => {
-    if (s <= 0) return '0s';
+    if (s <= 0) return "0s";
     const h = Math.floor(s / 3600);
     const m = Math.floor((s % 3600) / 60);
     const sec = s % 60;
     return h > 0 ? `${h}h ${m}m ${sec}s` : m > 0 ? `${m}m ${sec}s` : `${sec}s`;
   };
-  
+
   const getHeatColor = (p) => {
-    if (p <= 0) return 'var(--border)';
-    if (p < 20) return '#ef4444';
-    if (p < 40) return '#f59e0b';
-    if (p < 70) return '#3b82f6';
-    return '#10b981';
+    if (p <= 0) return "var(--border)";
+    if (p < 20) return "#ef4444";
+    if (p < 40) return "#f59e0b";
+    if (p < 70) return "#3b82f6";
+    return "#10b981";
   };
 
   // Initialize dates after mount
@@ -72,20 +575,20 @@ export default function DevicePage() {
     try {
       const headers = getAuthHeaders();
       const [devRes, rtRes] = await Promise.all([
-        fetch('/api/devices', { headers }),
-        fetch(`/api/runtime/${deviceId}`, { headers })
+        fetch("/api/devices", { headers }),
+        fetch(`/api/runtime/${deviceId}`, { headers }),
       ]);
-      if (devRes.status === 401 || devRes.status === 403) { 
-        logout(); 
-        return; 
+      if (devRes.status === 401 || devRes.status === 403) {
+        logout();
+        return;
       }
       const devs = await devRes.json();
       const rt = await rtRes.json();
       const devices = devs.devices || devs;
-      setDevice(devices.find(d => d.device_id == deviceId));
+      setDevice(devices.find((d) => d.device_id == deviceId));
       setStatus(rt);
-    } catch (e) { 
-      console.error(e); 
+    } catch (e) {
+      console.error(e);
     }
   };
 
@@ -94,7 +597,9 @@ export default function DevicePage() {
     setLoading(true);
     try {
       const headers = getAuthHeaders();
-      const res = await fetch(`/api/cycles/${deviceId}?date=${date}`, { headers });
+      const res = await fetch(`/api/cycles/${deviceId}?date=${date}`, {
+        headers,
+      });
       if (res.status === 401 || res.status === 403) {
         logout();
         return;
@@ -103,10 +608,10 @@ export default function DevicePage() {
       setDailyData(data);
       setPgCycles([...(data.cycles || [])].reverse());
       setPgPage(1);
-    } catch (e) { 
-      console.error(e); 
-    } finally { 
-      setLoading(false); 
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -116,15 +621,18 @@ export default function DevicePage() {
       const headers = getAuthHeaders();
       const end = new Date(wkStart);
       end.setDate(end.getDate() + 6);
-      const res = await fetch(`/api/daily-summary/${deviceId}?start=${wkStart.toISOString().split('T')[0]}&end=${end.toISOString().split('T')[0]}`, { headers });
+      const res = await fetch(
+        `/api/daily-summary/${deviceId}?start=${wkStart.toISOString().split("T")[0]}&end=${end.toISOString().split("T")[0]}`,
+        { headers },
+      );
       if (res.status === 401 || res.status === 403) {
         logout();
         return;
       }
       const data = await res.json();
       setWeeklyData(data.days || []);
-    } catch (e) { 
-      console.error(e); 
+    } catch (e) {
+      console.error(e);
     }
   };
 
@@ -135,24 +643,27 @@ export default function DevicePage() {
       const y = moDate.getFullYear();
       const m = moDate.getMonth();
       const lastDay = new Date(y, m + 1, 0).getDate();
-      const startStr = `${y}-${String(m+1).padStart(2,'0')}-01`;
-      const endStr = `${y}-${String(m+1).padStart(2,'0')}-${String(lastDay).padStart(2,'0')}`;
-      const res = await fetch(`/api/daily-summary/${deviceId}?start=${startStr}&end=${endStr}`, { headers });
+      const startStr = `${y}-${String(m + 1).padStart(2, "0")}-01`;
+      const endStr = `${y}-${String(m + 1).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
+      const res = await fetch(
+        `/api/daily-summary/${deviceId}?start=${startStr}&end=${endStr}`,
+        { headers },
+      );
       if (res.status === 401 || res.status === 403) {
         logout();
         return;
       }
       const data = await res.json();
       setMonthlyData(data.days || []);
-    } catch (e) { 
-      console.error(e); 
+    } catch (e) {
+      console.error(e);
     }
   };
 
   // Load initial data after mount
   useEffect(() => {
     if (!isMounted) return;
-    
+
     loadHero();
     if (dailyDate) {
       loadDaily(dailyDate);
@@ -162,10 +673,10 @@ export default function DevicePage() {
   // Load weekly/monthly data when tab changes
   useEffect(() => {
     if (!isMounted) return;
-    
-    if (activeTab === 'weekly' && wkStart) {
+
+    if (activeTab === "weekly" && wkStart) {
       loadWeekly();
-    } else if (activeTab === 'monthly' && moDate) {
+    } else if (activeTab === "monthly" && moDate) {
       loadMonthly();
     }
   }, [activeTab, wkStart, moDate, isMounted]);
@@ -173,7 +684,7 @@ export default function DevicePage() {
   // Auto-refresh hero every 15 seconds
   useEffect(() => {
     if (!isMounted) return;
-    
+
     const interval = setInterval(loadHero, 15000);
     return () => clearInterval(interval);
   }, [isMounted]);
@@ -183,11 +694,14 @@ export default function DevicePage() {
       return <div className="no-data">No activity on this date</div>;
     }
     return dailyData.cycles.map((c, idx) => (
-      <div 
-        key={idx} 
-        className={`timeline-segment ${c.isRunning ? 'running' : ''}`}
-        style={{ left: `${c.startPercent}%`, width: `${Math.max(0.15, parseFloat(c.widthPercent))}%` }}
-        title={`Cycle #${c.cycleNumber}: ${c.startTime} → ${c.endTime || 'running'} (${c.durationFormatted})`} 
+      <div
+        key={idx}
+        className={`timeline-segment ${c.isRunning ? "running" : ""}`}
+        style={{
+          left: `${c.startPercent}%`,
+          width: `${Math.max(0.15, parseFloat(c.widthPercent))}%`,
+        }}
+        title={`Cycle #${c.cycleNumber}: ${c.startTime} → ${c.endTime || "running"} (${c.durationFormatted})`}
       />
     ));
   };
@@ -196,43 +710,52 @@ export default function DevicePage() {
     if (!pgCycles.length) {
       return <div className="no-data">No cycles recorded for this date.</div>;
     }
-    
+
     const total = pgCycles.length;
     const pages = Math.ceil(total / PG_SIZE);
     const start = (pgPage - 1) * PG_SIZE;
     const slice = pgCycles.slice(start, start + PG_SIZE);
-    
-    const rows = slice.map((c, i) => {
-      const prev = i > 0 ? slice[i-1] : null;
-      let gap = '–';
-      if (!c.isRunning && prev && !prev.isRunning) {
-        try { 
-          const diff = Math.floor((new Date(`${dailyDate} ${prev.startTime}`) - new Date(`${dailyDate} ${c.endTime}`)) / 1000);
-          if (!isNaN(diff) && diff >= 0) gap = formatSeconds(diff);
-        } catch { 
-          gap = '–'; 
+
+    const rows = slice
+      .map((c, i) => {
+        const prev = i > 0 ? slice[i - 1] : null;
+        let gap = "–";
+        if (!c.isRunning && prev && !prev.isRunning) {
+          try {
+            const diff = Math.floor(
+              (new Date(`${dailyDate} ${prev.startTime}`) -
+                new Date(`${dailyDate} ${c.endTime}`)) /
+                1000,
+            );
+            if (!isNaN(diff) && diff >= 0) gap = formatSeconds(diff);
+          } catch {
+            gap = "–";
+          }
         }
-      }
-      return `<tr>
+        return `<tr>
         <td style="color:var(--muted)">${c.cycleNumber}</td>
         <td style="color:var(--green)">${c.startTime}</td>
         <td>${c.endTime ? c.endTime : '<span class="run-badge">● Running</span>'}</td>
         <td style="color:var(--yellow);font-weight:700">${c.durationFormatted}</td>
         <td style="color:var(--muted)">${gap}</td>
       </tr>`;
-    }).join('');
-    
-    const paginationHtml = pages > 1 ? `
+      })
+      .join("");
+
+    const paginationHtml =
+      pages > 1
+        ? `
       <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-top:1px solid var(--border);background:var(--card2)">
         <span style="font-size:.75rem;color:var(--muted)">Showing ${start + 1}–${Math.min(start + PG_SIZE, total)} of ${total} cycles (latest first)</span>
         <div style="display:flex;gap:6px">
-          <button class="page-prev" ${pgPage === 1 ? 'disabled' : ''} style="padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:${pgPage === 1 ? 'var(--card)' : 'var(--accent)'};color:${pgPage === 1 ? 'var(--muted)' : '#fff'};cursor:pointer;font-size:.78rem;font-weight:600">◀ Prev</button>
+          <button class="page-prev" ${pgPage === 1 ? "disabled" : ""} style="padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:${pgPage === 1 ? "var(--card)" : "var(--accent)"};color:${pgPage === 1 ? "var(--muted)" : "#fff"};cursor:pointer;font-size:.78rem;font-weight:600">◀ Prev</button>
           <span style="padding:5px 12px;font-size:.78rem;color:var(--muted)">${pgPage} / ${pages}</span>
-          <button class="page-next" ${pgPage === pages ? 'disabled' : ''} style="padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:${pgPage === pages ? 'var(--card)' : 'var(--accent)'};color:${pgPage === pages ? 'var(--muted)' : '#fff'};cursor:pointer;font-size:.78rem;font-weight:600">Next ▶</button>
+          <button class="page-next" ${pgPage === pages ? "disabled" : ""} style="padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:${pgPage === pages ? "var(--card)" : "var(--accent)"};color:${pgPage === pages ? "var(--muted)" : "#fff"};cursor:pointer;font-size:.78rem;font-weight:600">Next ▶</button>
         </div>
       </div>
-    ` : `<div style="padding:10px 16px;border-top:1px solid var(--border);font-size:.75rem;color:var(--muted)">${total} cycle${total !== 1 ? 's' : ''} · latest first</div>`;
-    
+    `
+        : `<div style="padding:10px 16px;border-top:1px solid var(--border);font-size:.75rem;color:var(--muted)">${total} cycle${total !== 1 ? "s" : ""} · latest first</div>`;
+
     return `
       <table class="data-table">
         <thead>
@@ -245,34 +768,54 @@ export default function DevicePage() {
   };
 
   const renderWeeklyBars = () => {
-    if (!weeklyData.length) return '<div class="no-data">No data for this week</div>';
-    
-    const maxSec = Math.max(...weeklyData.map(d => d.runtime_seconds), 1);
-    return weeklyData.map(day => {
-      const pct = (day.runtime_seconds / maxSec * 100).toFixed(1);
-      const dObj = new Date(day.date + 'T00:00:00');
-      const isToday = day.date === getTodayString();
-      return `<div class="weekly-col">
+    if (!weeklyData.length)
+      return '<div class="no-data">No data for this week</div>';
+
+    const maxSec = Math.max(...weeklyData.map((d) => d.runtime_seconds), 0.1);
+
+    return weeklyData
+      .map((day) => {
+        let pct = (day.runtime_seconds / maxSec) * 100;
+        if (maxSec < 60 && day.runtime_seconds === 0) {
+          pct = 4;
+        } else if (day.runtime_seconds === 0) {
+          pct = 4;
+        } else if (pct < 8) {
+          pct = 8;
+        }
+
+        const dObj = new Date(day.date + "T00:00:00");
+        const isToday = day.date === getTodayString();
+
+        return `
+      <div class="weekly-col">
         <div class="weekly-bar-wrap">
-          <div class="weekly-bar ${isToday ? 'today' : ''}" style="height: ${Math.max(2, parseFloat(pct))}%" data-date="${day.date}">
+          <div class="weekly-bar ${isToday ? "today" : ""}" style="height: ${Math.min(100, Math.max(4, pct))}%; background: ${isToday ? "var(--accent)" : "var(--green)"}" data-date="${day.date}">
             <div class="bar-tooltip">${day.date}<br>Runtime: ${day.runtime_formatted}<br>Cycles: ${day.cycle_count}<br>Eff: ${day.efficiency_percent}%</div>
           </div>
         </div>
-        <div class="weekly-day">${dObj.toLocaleDateString('en-US', { weekday: 'short' })} ${dObj.getDate()}</div>
-        <div class="weekly-hours" style="color: ${isToday ? 'var(--green)' : 'var(--accent)'}">${day.runtime_hours}h</div>
-      </div>`;
-    }).join('');
+        <div class="weekly-day">${dObj.toLocaleDateString("en-US", { weekday: "short" })} ${dObj.getDate()}</div>
+        <div class="weekly-hours" style="color: ${isToday ? "var(--green)" : "var(--accent)"}">${(day.runtime_seconds / 3600).toFixed(2)}h</div>
+      </div>
+    `;
+      })
+      .join("");
   };
 
   const renderWeeklyTable = () => {
-    if (!weeklyData.length) return '<div class="no-data">No data for this week</div>';
-    
+    if (!weeklyData.length)
+      return '<div class="no-data">No data for this week</div>';
+
     const totSec = weeklyData.reduce((a, d) => a + d.runtime_seconds, 0);
     const totCy = weeklyData.reduce((a, d) => a + d.cycle_count, 0);
-    const rows = weeklyData.map(day => {
-      const dow = new Date(day.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', day: '2-digit', month: 'short' });
-      const col = getHeatColor(parseFloat(day.efficiency_percent));
-      return `<tr>
+    const rows = weeklyData
+      .map((day) => {
+        const dow = new Date(day.date + "T00:00:00").toLocaleDateString(
+          "en-US",
+          { weekday: "short", day: "2-digit", month: "short" },
+        );
+        const col = getHeatColor(parseFloat(day.efficiency_percent));
+        return `<tr>
         <td>${dow}</td>
         <td style="color:var(--accent)">${day.cycle_count}</td>
         <td style="color:var(--green)">${day.runtime_formatted}</td>
@@ -286,8 +829,9 @@ export default function DevicePage() {
           </div>
         </td>
       </tr>`;
-    }).join('');
-    
+      })
+      .join("");
+
     return `
       <table class="data-table">
         <thead><tr><th>Day</th><th>Cycles</th><th>Runtime</th><th>Hours</th><th>Efficiency</th></tr></thead>
@@ -297,7 +841,7 @@ export default function DevicePage() {
             <td>Total / Avg</td>
             <td style="color:var(--accent)">${totCy}</td>
             <td style="color:var(--green)">${formatSeconds(totSec)}</td>
-            <td>${(totSec/3600).toFixed(2)}h</td>
+            <td>${(totSec / 3600).toFixed(2)}h</td>
             <td style="color:var(--muted)">–</td>
           </tr>
         </tbody>
@@ -306,100 +850,133 @@ export default function DevicePage() {
   };
 
   const renderCalendar = () => {
-    // CRITICAL FIX: Return early if moDate is null
     if (!moDate) {
       return '<div class="loading">Loading calendar...</div>';
     }
-    
+
     const mp = {};
-    monthlyData.forEach(d => { mp[d.date] = d; });
-    const firstDow = new Date(moDate.getFullYear(), moDate.getMonth(), 1).getDay();
-    const lastDay = new Date(moDate.getFullYear(), moDate.getMonth() + 1, 0).getDate();
-    let html = '';
-    
+    monthlyData.forEach((d) => {
+      mp[d.date] = d;
+    });
+    const firstDow = new Date(
+      moDate.getFullYear(),
+      moDate.getMonth(),
+      1,
+    ).getDay();
+    const lastDay = new Date(
+      moDate.getFullYear(),
+      moDate.getMonth() + 1,
+      0,
+    ).getDate();
+    let html = "";
+
     for (let i = 0; i < firstDow; i++) {
-      html += '<div class="calendar-cell empty"><div class="calendar-day"></div></div>';
+      html +=
+        '<div class="calendar-cell empty"><div class="calendar-day"></div></div>';
     }
-    
+
     for (let d = 1; d <= lastDay; d++) {
-      const dateStr = `${moDate.getFullYear()}-${String(moDate.getMonth() + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-      const info = mp[dateStr] || { runtime_seconds: 0, cycle_count: 0, runtime_formatted: '–', efficiency_percent: '0.0' };
+      const dateStr = `${moDate.getFullYear()}-${String(moDate.getMonth() + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+      const info = mp[dateStr] || {
+        runtime_seconds: 0,
+        cycle_count: 0,
+        runtime_formatted: "–",
+        efficiency_percent: "0.0",
+      };
       const isToday = dateStr === getTodayString();
       const col = getHeatColor(parseFloat(info.efficiency_percent));
-      
+
       html += `
-        <div class="calendar-cell ${isToday ? 'today' : ''}" data-date="${dateStr}">
-          <div class="calendar-day" style="color: ${isToday ? 'var(--accent)' : 'var(--text)'}">${d}</div>
-          ${info.runtime_seconds > 0 ? `
+        <div class="calendar-cell ${isToday ? "today" : ""}" data-date="${dateStr}">
+          <div class="calendar-day" style="color: ${isToday ? "var(--accent)" : "var(--text)"}">${d}</div>
+          ${
+            info.runtime_seconds > 0
+              ? `
             <div class="calendar-runtime">${info.runtime_formatted}</div>
-            <div class="calendar-cycles">${info.cycle_count} cycle${info.cycle_count !== 1 ? 's' : ''}</div>
+            <div class="calendar-cycles">${info.cycle_count} cycle${info.cycle_count !== 1 ? "s" : ""}</div>
             <div class="calendar-heat"><div class="calendar-heat-fill" style="width: ${info.efficiency_percent}%; background: ${col}"></div></div>
-          ` : `<div class="calendar-cycles" style="color:var(--border)">No data</div>`}
+          `
+              : `<div class="calendar-cycles" style="color:var(--border)">No data</div>`
+          }
         </div>
       `;
     }
-    
+
     return html;
   };
 
   // Set up event listeners after render
   useEffect(() => {
     if (!isMounted) return;
-    
-    // Handler for weekly bar clicks
+
     const handleWeeklyBarClick = (e) => {
-      const bar = e.target.closest('.weekly-bar');
+      const bar = e.target.closest(".weekly-bar");
       if (bar && bar.dataset.date) {
         const date = bar.dataset.date;
         setDailyDate(date);
         loadDaily(date);
-        setActiveTab('daily');
+        setActiveTab("daily");
       }
     };
-    
-    // Handler for calendar cell clicks
+
     const handleCalendarClick = (e) => {
-      const cell = e.target.closest('.calendar-cell');
-      if (cell && cell.dataset.date && !cell.classList.contains('empty')) {
+      const cell = e.target.closest(".calendar-cell");
+      if (cell && cell.dataset.date && !cell.classList.contains("empty")) {
         const date = cell.dataset.date;
         setDailyDate(date);
         loadDaily(date);
-        setActiveTab('daily');
+        setActiveTab("daily");
       }
     };
-    
-    // Handler for pagination buttons
+
     const handlePrevPage = () => {
       const pages = Math.ceil(pgCycles.length / PG_SIZE);
       setPgPage(Math.max(1, pgPage - 1));
     };
-    
+
     const handleNextPage = () => {
       const pages = Math.ceil(pgCycles.length / PG_SIZE);
       setPgPage(Math.min(pages, pgPage + 1));
     };
-    
-    // Add event listeners
-    document.querySelector('.weekly-bars')?.addEventListener('click', handleWeeklyBarClick);
-    document.querySelector('.calendar-grid')?.addEventListener('click', handleCalendarClick);
-    document.querySelector('.page-prev')?.addEventListener('click', handlePrevPage);
-    document.querySelector('.page-next')?.addEventListener('click', handleNextPage);
-    
+
+    document
+      .querySelector(".weekly-bars")
+      ?.addEventListener("click", handleWeeklyBarClick);
+    document
+      .querySelector(".calendar-grid")
+      ?.addEventListener("click", handleCalendarClick);
+    document
+      .querySelector(".page-prev")
+      ?.addEventListener("click", handlePrevPage);
+    document
+      .querySelector(".page-next")
+      ?.addEventListener("click", handleNextPage);
+
     return () => {
-      document.querySelector('.weekly-bars')?.removeEventListener('click', handleWeeklyBarClick);
-      document.querySelector('.calendar-grid')?.removeEventListener('click', handleCalendarClick);
-      document.querySelector('.page-prev')?.removeEventListener('click', handlePrevPage);
-      document.querySelector('.page-next')?.removeEventListener('click', handleNextPage);
+      document
+        .querySelector(".weekly-bars")
+        ?.removeEventListener("click", handleWeeklyBarClick);
+      document
+        .querySelector(".calendar-grid")
+        ?.removeEventListener("click", handleCalendarClick);
+      document
+        .querySelector(".page-prev")
+        ?.removeEventListener("click", handlePrevPage);
+      document
+        .querySelector(".page-next")
+        ?.removeEventListener("click", handleNextPage);
     };
   }, [isMounted, weeklyData, monthlyData, pgCycles, pgPage]);
 
-  // Show loading state while mounting
   if (!isMounted) {
     return (
       <>
         <Header />
         <main className="device-main">
-          <div className="loading" style={{ textAlign: 'center', padding: '50px' }}>
+          <div
+            className="loading"
+            style={{ textAlign: "center", padding: "50px" }}
+          >
             <div className="loading-spinner"></div>
             <p>Loading device data...</p>
           </div>
@@ -413,92 +990,183 @@ export default function DevicePage() {
     <>
       <Header />
       <main className="device-main">
-        <a href="/" className="back-link">← All Devices</a>
-        
+        <Link href="/" className="back-link">
+          ← All Devices
+        </Link>
+
+        {/* Enhanced Hero with Config Buttons */}
         <div className="hero">
           <div>
-            <div className="hero-name">{device?.machine_name || 'Loading…'}</div>
-            <div className="hero-sub">Device ID: <strong>{deviceId}</strong></div>
+            <div className="hero-name">
+              {device?.machine_name || "Loading…"}
+            </div>
+            <div className="hero-sub">
+              Device ID: <strong>{deviceId}</strong>
+            </div>
           </div>
           <div className="hero-right">
             <div className="session-pill">
-              Session: <span>{status?.current_session > 0 ? status.current_session_formatted : <span style={{ color: 'var(--muted)' }}>Idle</span>}</span>
+              Session:{" "}
+              <span>
+                {status?.current_session > 0 ? (
+                  status.current_session_formatted
+                ) : (
+                  <span style={{ color: "var(--muted)" }}>Idle</span>
+                )}
+              </span>
             </div>
-            <div className={`big-status ${status?.current_status === 'ON' ? 'on' : 'off'}`}>
+            <div
+              className={`big-status ${status?.current_status === "ON" ? "on" : "off"}`}
+            >
               <span className="dot"></span>
-              <span>{status?.current_status || '–'}</span>
+              <span>{status?.current_status || "–"}</span>
             </div>
           </div>
         </div>
 
+        {/* Configuration Buttons */}
+        {device && (
+          <div style={{ display: "flex", gap: "12px", marginBottom: "24px" }}>
+            <button
+              className="btn btn-secondary"
+              onClick={() => setWifiModalOpen(true)}
+              style={{ display: "flex", alignItems: "center", gap: "6px" }}
+            >
+              📡 Configure WiFi
+            </button>
+            <button
+              className="btn btn-secondary"
+              onClick={() => setThresholdModalOpen(true)}
+              style={{ display: "flex", alignItems: "center", gap: "6px" }}
+            >
+              ⚙️ Set Threshold
+            </button>
+          </div>
+        )}
+
+        {flash.msg && (
+          <div
+            className={`flash ${flash.type}`}
+            style={{ marginBottom: "20px" }}
+          >
+            {flash.msg}
+          </div>
+        )}
+
         <div className="tabs">
-          <button className={`tab ${activeTab === 'daily' ? 'active' : ''}`} onClick={() => setActiveTab('daily')}>📅 Daily</button>
-          <button className={`tab ${activeTab === 'weekly' ? 'active' : ''}`} onClick={() => setActiveTab('weekly')}>📆 Weekly</button>
-          <button className={`tab ${activeTab === 'monthly' ? 'active' : ''}`} onClick={() => setActiveTab('monthly')}>🗓️ Monthly</button>
+          <button
+            className={`tab ${activeTab === "daily" ? "active" : ""}`}
+            onClick={() => setActiveTab("daily")}
+          >
+            📅 Daily
+          </button>
+          <button
+            className={`tab ${activeTab === "weekly" ? "active" : ""}`}
+            onClick={() => setActiveTab("weekly")}
+          >
+            📆 Weekly
+          </button>
+          <button
+            className={`tab ${activeTab === "monthly" ? "active" : ""}`}
+            onClick={() => setActiveTab("monthly")}
+          >
+            🗓️ Monthly
+          </button>
         </div>
 
         {/* Daily Panel */}
-        <div className={`panel ${activeTab === 'daily' ? 'active' : ''}`}>
+        <div className={`panel ${activeTab === "daily" ? "active" : ""}`}>
           <div className="date-controls">
             <label>Date</label>
-            <input 
-              type="date" 
-              className="date-input" 
-              value={dailyDate} 
-              onChange={(e) => { 
+            <input
+              type="date"
+              className="date-input"
+              value={dailyDate}
+              onChange={(e) => {
                 const newDate = e.target.value;
                 const today = getTodayString();
                 if (newDate <= today) {
-                  setDailyDate(newDate); 
+                  setDailyDate(newDate);
                   loadDaily(newDate);
                 }
-              }} 
+              }}
               max={getTodayString()}
             />
-            <button className="nav-btn" onClick={() => {
-              const d = new Date(dailyDate + 'T00:00:00');
-              d.setDate(d.getDate() - 1);
-              const target = d.toISOString().split('T')[0];
-              const today = getTodayString();
-              if (target <= today) {
-                setDailyDate(target);
-                loadDaily(target);
-              }
-            }}>◀</button>
-            <button className="nav-btn" onClick={() => {
-              const d = new Date(dailyDate + 'T00:00:00');
-              d.setDate(d.getDate() + 1);
-              const target = d.toISOString().split('T')[0];
-              const today = getTodayString();
-              if (target <= today) {
-                setDailyDate(target);
-                loadDaily(target);
-              }
-            }}>▶</button>
-            <button className="nav-btn" onClick={() => {
-              const today = getTodayString();
-              setDailyDate(today);
-              loadDaily(today);
-            }}>Today</button>
+
+            <button
+              className="nav-btn"
+              onClick={() => {
+                const [year, month, day] = dailyDate.split("-").map(Number);
+                const d = new Date(year, month - 1, day);
+                d.setDate(d.getDate() - 1);
+                const target = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+                const today = getTodayString();
+                if (target <= today) {
+                  setDailyDate(target);
+                  loadDaily(target);
+                }
+              }}
+            >
+              ◀
+            </button>
+
+            <button
+              className="nav-btn"
+              onClick={() => {
+                const [year, month, day] = dailyDate.split("-").map(Number);
+                const d = new Date(year, month - 1, day);
+                d.setDate(d.getDate() + 1);
+                const target = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+                const today = getTodayString();
+                if (target <= today) {
+                  setDailyDate(target);
+                  loadDaily(target);
+                }
+              }}
+            >
+              ▶
+            </button>
+            <button
+              className="nav-btn"
+              onClick={() => {
+                const today = getTodayString();
+                setDailyDate(today);
+                loadDaily(today);
+              }}
+            >
+              Today
+            </button>
           </div>
 
           <div className="stat-row">
             <div className="stat-card-sm">
               <div className="stat-label">Total Cycles</div>
-              <div className="stat-value" style={{ color: 'var(--accent)' }}>{dailyData?.totalCycles || '–'}</div>
+              <div className="stat-value" style={{ color: "var(--accent)" }}>
+                {dailyData?.totalCycles || "–"}
+              </div>
             </div>
             <div className="stat-card-sm">
               <div className="stat-label">Total Runtime</div>
-              <div className="stat-value" style={{ color: 'var(--green)' }}>{dailyData?.totalRuntimeFormatted || '–'}</div>
-              <div className="stat-sub">{dailyData ? (dailyData.totalRuntime / 3600).toFixed(2) + ' hrs' : ''}</div>
+              <div className="stat-value" style={{ color: "var(--green)" }}>
+                {dailyData?.totalRuntimeFormatted || "–"}
+              </div>
+              <div className="stat-sub">
+                {dailyData
+                  ? (dailyData.totalRuntime / 3600).toFixed(2) + " hrs"
+                  : ""}
+              </div>
             </div>
             <div className="stat-card-sm">
               <div className="stat-label">Downtime</div>
-              <div className="stat-value" style={{ color: 'var(--red)' }}>{dailyData?.downtimeFormatted || '–'}</div>
+              <div className="stat-value" style={{ color: "var(--red)" }}>
+                {dailyData?.downtimeFormatted || "–"}
+              </div>
             </div>
             <div className="stat-card-sm">
               <div className="stat-label">Efficiency</div>
-              <div className="stat-value" style={{ color: 'var(--yellow)' }}>{dailyData?.efficiencyPercent || '–'}%</div>
+              <div className="stat-value" style={{ color: "var(--yellow)" }}>
+                {dailyData?.efficiencyPercent || "–"}%
+              </div>
             </div>
           </div>
 
@@ -508,97 +1176,215 @@ export default function DevicePage() {
               <span style={{ fontWeight: 400 }}>{dailyDate}</span>
             </div>
             <div className="timeline-hours">
-              {[0,3,6,9,12,15,18,21,24].map(h => (
-                <span key={h} style={h === 24 ? { textAlign: 'right', flex: '0 0 auto' } : {}}>{h}:00</span>
+              {[0, 3, 6, 9, 12, 15, 18, 21, 24].map((h) => (
+                <span
+                  key={h}
+                  style={
+                    h === 24 ? { textAlign: "right", flex: "0 0 auto" } : {}
+                  }
+                >
+                  {h}:00
+                </span>
               ))}
             </div>
             <div className="timeline-bar">
-              {loading ? <div className="loading"><div className="loading-spinner"></div>Loading…</div> : renderTimeline()}
+              {loading ? (
+                <div className="loading">
+                  <div className="loading-spinner"></div>Loading…
+                </div>
+              ) : (
+                renderTimeline()
+              )}
             </div>
             <div className="timeline-legend">
-              <div className="legend-item"><div className="legend-dot" style={{ background: 'var(--green)' }}></div>Machine ON</div>
-              <div className="legend-item"><div className="legend-dot" style={{ background: 'rgba(239,68,68,.25)' }}></div>Machine OFF</div>
-              <div className="legend-item"><div className="legend-dot" style={{ background: 'linear-gradient(90deg,var(--green),var(--yellow))' }}></div>Currently Running</div>
+              <div className="legend-item">
+                <div
+                  className="legend-dot"
+                  style={{ background: "var(--green)" }}
+                ></div>
+                Machine ON
+              </div>
+              <div className="legend-item">
+                <div
+                  className="legend-dot"
+                  style={{ background: "rgba(239,68,68,.25)" }}
+                ></div>
+                Machine OFF
+              </div>
+              <div className="legend-item">
+                <div
+                  className="legend-dot"
+                  style={{
+                    background:
+                      "linear-gradient(90deg,var(--green),var(--yellow))",
+                  }}
+                ></div>
+                Currently Running
+              </div>
             </div>
           </div>
 
           <div className="table-wrap">
             <div className="table-header">
               <h3>Cycle Details</h3>
-              <span className="count-badge">{dailyData?.totalCycles || 0} cycles</span>
+              <span className="count-badge">
+                {dailyData?.totalCycles || 0} cycles
+              </span>
             </div>
             <div dangerouslySetInnerHTML={{ __html: renderCycleTable() }} />
           </div>
         </div>
 
         {/* Weekly Panel */}
-        <div className={`panel ${activeTab === 'weekly' ? 'active' : ''}`}>
+        <div className={`panel ${activeTab === "weekly" ? "active" : ""}`}>
           <div className="date-controls">
-            <button className="nav-btn" onClick={() => {
-              if (wkStart) {
-                const newStart = new Date(wkStart);
-                newStart.setDate(newStart.getDate() - 7);
-                setWkStart(newStart);
-              }
-            }}>◀ Prev</button>
+            <button
+              className="nav-btn"
+              onClick={() => {
+                if (wkStart) {
+                  const newStart = new Date(wkStart);
+                  newStart.setDate(newStart.getDate() - 7);
+                  setWkStart(newStart);
+                }
+              }}
+            >
+              ◀ Prev
+            </button>
             <div className="range-label">
-              {wkStart ? `${formatDate(wkStart)} – ${formatDate(new Date(wkStart.getTime() + 6 * 24 * 60 * 60 * 1000))}` : '–'}
+              {wkStart
+                ? `${formatDate(wkStart)} – ${formatDate(new Date(wkStart.getTime() + 6 * 24 * 60 * 60 * 1000))}`
+                : "–"}
             </div>
-            <button className="nav-btn" onClick={() => {
-              if (wkStart) {
-                const newStart = new Date(wkStart);
-                newStart.setDate(newStart.getDate() + 7);
-                setWkStart(newStart);
-              }
-            }}>Next ▶</button>
-            <button className="nav-btn" onClick={() => {
-              setWkStart(getMonday(new Date()));
-            }}>This Week</button>
+            <button
+              className="nav-btn"
+              onClick={() => {
+                if (wkStart) {
+                  const newStart = new Date(wkStart);
+                  newStart.setDate(newStart.getDate() + 7);
+                  setWkStart(newStart);
+                }
+              }}
+            >
+              Next ▶
+            </button>
+            <button
+              className="nav-btn"
+              onClick={() => {
+                setWkStart(getMonday(new Date()));
+              }}
+            >
+              This Week
+            </button>
           </div>
 
           <div className="weekly-chart">
             <div className="timeline-title">Daily Runtime (hours)</div>
-            <div className="weekly-bars" dangerouslySetInnerHTML={{ __html: renderWeeklyBars() }} />
+            <div
+              className="weekly-bars"
+              dangerouslySetInnerHTML={{ __html: renderWeeklyBars() }}
+            />
           </div>
 
           <div className="table-wrap">
-            <div className="table-header"><h3>Weekly Summary</h3></div>
+            <div className="table-header">
+              <h3>Weekly Summary</h3>
+            </div>
             <div dangerouslySetInnerHTML={{ __html: renderWeeklyTable() }} />
           </div>
         </div>
 
         {/* Monthly Panel */}
-        <div className={`panel ${activeTab === 'monthly' ? 'active' : ''}`}>
+        <div className={`panel ${activeTab === "monthly" ? "active" : ""}`}>
           <div className="date-controls">
-            <button className="nav-btn" onClick={() => {
-              if (moDate) {
-                setMoDate(new Date(moDate.getFullYear(), moDate.getMonth() - 1, 1));
-              }
-            }}>◀ Prev</button>
+            <button
+              className="nav-btn"
+              onClick={() => {
+                if (moDate) {
+                  setMoDate(
+                    new Date(moDate.getFullYear(), moDate.getMonth() - 1, 1),
+                  );
+                }
+              }}
+            >
+              ◀ Prev
+            </button>
             <div className="range-label">
-              {moDate?.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+              {moDate?.toLocaleDateString("en-US", {
+                month: "long",
+                year: "numeric",
+              })}
             </div>
-            <button className="nav-btn" onClick={() => {
-              if (moDate) {
-                setMoDate(new Date(moDate.getFullYear(), moDate.getMonth() + 1, 1));
-              }
-            }}>Next ▶</button>
-            <button className="nav-btn" onClick={() => {
-              const now = new Date();
-              setMoDate(new Date(now.getFullYear(), now.getMonth(), 1));
-            }}>This Month</button>
+            <button
+              className="nav-btn"
+              onClick={() => {
+                if (moDate) {
+                  setMoDate(
+                    new Date(moDate.getFullYear(), moDate.getMonth() + 1, 1),
+                  );
+                }
+              }}
+            >
+              Next ▶
+            </button>
+            <button
+              className="nav-btn"
+              onClick={() => {
+                const now = new Date();
+                setMoDate(new Date(now.getFullYear(), now.getMonth(), 1));
+              }}
+            >
+              This Month
+            </button>
           </div>
 
           <div className="calendar-wrap">
             <div className="calendar-dows">
-              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                <div key={day} className="calendar-dow">{day}</div>
+              {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+                <div key={day} className="calendar-dow">
+                  {day}
+                </div>
               ))}
             </div>
-            <div className="calendar-grid" dangerouslySetInnerHTML={{ __html: renderCalendar() }} />
+            <div
+              className="calendar-grid"
+              dangerouslySetInnerHTML={{ __html: renderCalendar() }}
+            />
           </div>
         </div>
       </main>
+
+      {/* Modals */}
+      {wifiModalOpen && device && (
+        <WiFiConfigModal
+          device={device}
+          onSuccess={(data) => {
+            setWifiModalOpen(false);
+            setFlash({
+              type: "ok",
+              msg: `WiFi config sent to ${data.device_id}`,
+            });
+            loadHero();
+          }}
+          onClose={() => setWifiModalOpen(false)}
+        />
+      )}
+
+      {thresholdModalOpen && device && (
+        <ThresholdModal
+          device={device}
+          currentThreshold={device.current_threshold || 5}
+          onSuccess={(data) => {
+            setThresholdModalOpen(false);
+            setFlash({
+              type: "ok",
+              msg: `Threshold updated to ${data.current_threshold}A`,
+            });
+            loadHero();
+          }}
+          onClose={() => setThresholdModalOpen(false)}
+        />
+      )}
+
       <Footer />
     </>
   );
