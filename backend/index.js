@@ -34,9 +34,9 @@ app.use((err, req, res, next) => {
 });
 
 // ─── START ────────────────────────────────────────────────────
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT;
 
-app.listen(PORT, async () => {
+app.listen(PORT, '0.0.0.0', async () => {
     const pool = require('./config/db');
 
     try {
@@ -49,5 +49,5 @@ app.listen(PORT, async () => {
     const { connectMQTT } = require('./config/mqttClient');
     connectMQTT();
 
-    console.log(`🚀 API Server running → http://localhost:${PORT}`);
+    console.log(`🚀 API Server running → http://0.0.0.0:${PORT}`);
 });

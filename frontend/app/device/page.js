@@ -4,9 +4,9 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Header from "../../components/Header";
-import Footer from "../../components/Footer";
-import { useAuth } from "../../hooks/useAuth";
+import Header from "../components/Header";
+import Footer from "../components/Footer";
+import { useAuth } from "../hooks/useAuth";
 
 // ─── WiFi Configuration Modal ──────────────────────────────────────────────────
 function WiFiConfigModal({ device, onSuccess, onClose }) {
